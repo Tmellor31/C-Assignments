@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#define LIMIT 100000000
 int main(void)
 {
     int number;
@@ -9,7 +9,7 @@ int main(void)
     int largest = 0;
     int total = 0;
 
-    for (i = 0; i < 10000000; i++)
+    for (i = 0; i < LIMIT; i++)
     {
 
         number = i;
