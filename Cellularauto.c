@@ -3,46 +3,51 @@
 #include <math.h>
 #include <stdlib.h>
 
-#define Columns 34
-#define Rows 30
+#define COLUMNS 34
+#define ROWS 30
+#define GRIDSIZE 1020
 
-int size[Columns];
+int size[COLUMNS];
 
-typedef enum CellState
-{
-    OFF,
-    ON
-} CellState;
+typedef enum CellState{OFF, ON} CellState;
 
 void test(void);
 CellState cellgenerator(CellState x, CellState y, CellState z);
-CellState rowcreator(CellState x, CellState y, CellState z);
+void rowcreator(void);
 
 int main(void)
-{
-    test();
-    int array[20] = {0}; // 5x4 grid
-    int x;
-    array[2] = 1;
-    array[6] = 1;
-    array[8] = 1;
+{//need to create the grid via this method and run the digits array[] through cellgenerator. Excluding top line for user input. 
+ test();
+ rowcreator(); 
 
-    for (x = 0; x < 20; x++)
-    {
-        if (x % 5 == 0 && x != 0)
-        {
-            printf("\n");
-        }
-        printf("%i", array[x]);
-    }
-//need to create the grid via this method and run the digits array[] through cellgenerator. Excluding top line for user input. 
-    return 0;
+return 0;
 }
 
-// void rowcreator(CellState x, CellState y, CellState z)
-// {
+void rowcreator(void)
+{
+  
+ int firstline[GRIDSIZE] = {0}; // 34x30 grid
+ int secondline[GRIDSIZE+ROWS]; //firstline + 30 = first character of second line 
+ int row1;
+ int row2; 
 
-// }
+ for(row1 = 0; row1 < GRIDSIZE; row1++)
+  {  
+   row2 = row1 + ROWS; 
+    if(cellgenerator((secondline[row2] - 31),(secondline[row2] -30),(secondline[row2] -29)) == ON)
+      {
+       printf("1");//prints either 0 or 1 based on firstline 
+      } 
+    else 
+      {
+       printf("0"); 
+      } 
+     if (secondline[row2] % 30 == 0 && secondline[row2] != 0) //makes a new line at 30 
+     {
+       printf("\n");
+     } 	    
+  }
+}
 
 CellState cellgenerator(CellState x, CellState y, CellState z)
 {
