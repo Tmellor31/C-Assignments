@@ -1,7 +1,11 @@
 #include "bingrid.h"
 
-char setcell(char *str, int xcoord, int ycoord)
+//need to rename the xcoord and ycoord to row and col respectively, and then make sure the ordering is consistent
+
+// Retrieves the character from str that relates to xcoord and ycoord
+char setcell(char *str, int grid_size, int xcoord, int ycoord)
 {
+    return str[xcoord + (grid_size * ycoord)];
 }
 
 bool str2board(board *brd, char *str)
@@ -18,16 +22,15 @@ bool str2board(board *brd, char *str)
     brd->sz = strlen(str) / 2;
     // set the size of b2d
     // populate b2d
-    char newboard[2][2];
     int x_coord, y_coord;
-    for (x_coord = 0; x_coord < 2; x_coord++)
+    for (x_coord = 0; x_coord < brd->sz; x_coord++)
     {
-        for (y_coord = 0; y_coord < 2; y_coord++)
+        for (y_coord = 0; y_coord < brd->sz; y_coord++)
         {
-            newboard[x_coord][y_coord] = setcell(str, x_coord, y_coord);
+            brd->b2d[x_coord][y_coord] = setcell(str, brd->sz, x_coord, y_coord);
         }
     }
-    brd->b2d return true;
+    return true;
 }
 
 void board2str(char *str, board *brd)
@@ -45,6 +48,14 @@ bool solve_board(board *brd)
 
 void printboard(board *brd)
 {
+    int i, j;
+    for (i = 0; i < brd->sz; i++)
+    {
+        for (j = 0; j < brd->sz; j++)
+        {
+            printf("i = %i, j = %i, %c\n", i, j, brd->b2d[i][j]);
+        }
+    }
 }
 
 void test(void)
@@ -55,8 +66,8 @@ void test(void)
     assert(str2board(&b, ".0.."));
     assert(b.sz == 2);
     assert(b.b2d[0][0] == UNK);
-    assert(b.b2d[0][1] == ZERO);
-    assert(b.b2d[1][0] == UNK);
+    assert(b.b2d[0][1] == UNK);
+    assert(b.b2d[1][0] == ZERO);
     assert(b.b2d[1][1] == UNK);
     assert(solve_board(&b) == true);
     board2str(str, &b);
