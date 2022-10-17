@@ -1,11 +1,12 @@
 #include "bingrid.h"
 
-//need to rename the xcoord and ycoord to row and col respectively, and then make sure the ordering is consistent
+//need to rename the row and col to row and col respectively, and then make sure the ordering is consistent - will change at end
 
-// Retrieves the character from str that relates to xcoord and ycoord
-char setcell(char *str, int grid_size, int xcoord, int ycoord)
+void printboard(board *brd);
+// Retrieves the character from str that relates to row and col
+char setcell(char *str, int grid_size, int row, int col)
 {
-    return str[xcoord + (grid_size * ycoord)];
+    return str[row + (grid_size * col)];
 }
 
 bool str2board(board *brd, char *str)
@@ -22,12 +23,12 @@ bool str2board(board *brd, char *str)
     brd->sz = strlen(str) / 2;
     // set the size of b2d
     // populate b2d
-    int x_coord, y_coord;
-    for (x_coord = 0; x_coord < brd->sz; x_coord++)
+    int row, col;
+    for (row = 0; row < brd->sz; row++)
     {
-        for (y_coord = 0; y_coord < brd->sz; y_coord++)
+        for (col = 0; col < brd->sz; col++)
         {
-            brd->b2d[x_coord][y_coord] = setcell(str, brd->sz, x_coord, y_coord);
+            brd->b2d[row][col] = setcell(str, brd->sz, row, col);
         }
     }
     return true;
@@ -42,8 +43,53 @@ void board2str(char *str, board *brd)
 }
 
 bool solve_board(board *brd)
-{
-    return true;
+{   bool haschanged = false;  
+    //Checks for 'Pairs' rule
+    printboard(brd);  
+    int row, col; 
+    for (row = 0; row < brd->sz; row++) // Could use a dowhile loop instead of &&haschanged
+    {
+        for (col = 0; col < brd->sz; col++)
+        {
+          if((brd->b2d[row][col] ==  1) && (brd->b2d[row][col+1] == 1)) 
+          {
+            brd->b2d[row+1][col] = 0;
+            brd->b2d[row+1][col+1] = 0;
+            haschanged = true;  
+            return true; 
+          }
+          if((brd->b2d[row+1][col] ==  1) && (brd->b2d[row+1][col+1] == 1) && (haschanged == false))  
+          {
+            brd->b2d[row+1][col] = 0;
+            brd->b2d[row+1][col+1] = 0;
+            haschanged = true;  
+            return true; 
+          } 
+          if((brd->b2d[row][col] ==  1) && (brd->b2d[row+1][col] == 1) && (haschanged == false))  
+          {
+            brd->b2d[row][col+1] = 1;
+            brd->b2d[row+1][col+1] = 1;
+            haschanged = true;  
+            return true; 
+          }
+          if((brd->b2d[row][col] ==  0) && (brd->b2d[row][col+1] == 0) && (haschanged == false))  
+          {
+            brd->b2d[row+1][col] = 1;
+            brd->b2d[row+1][col+1] = 1;
+            haschanged = true;  
+            return true;
+          }  
+          if((brd->b2d[row+1][col] ==  0) && (brd->b2d[row+1][col+1] == 0) && (haschanged == false))  
+          {
+            brd->b2d[row][col] = 1;
+            brd->b2d[row][col+1] = 1;
+            haschanged = true;  
+            return true;
+          }  
+          
+return false;    
+        } 
+    }   
 }
 
 void printboard(board *brd)
@@ -53,7 +99,7 @@ void printboard(board *brd)
     {
         for (j = 0; j < brd->sz; j++)
         {
-            printf("i = %i, j = %i, %c\n", i, j, brd->b2d[i][j]);
+            printf("row = %i, col = %i, %c\n", i, j, brd->b2d[i][j]);
         }
     }
 }
