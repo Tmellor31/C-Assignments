@@ -1,12 +1,14 @@
 #include "bingrid.h"
+//While loop that stops when haschanged = false.
+//In solve board - need a 'has there been an overall change, and has there been a change in this run. Stop when there hasnt been a change and return when there has been a change.  
+//At the end of board to string need to cut off the end(truncate) to make the string a certain size. 
 
 bool applyPairsToRow(board *brd, int row, int col);
 bool applyPairsToCol(board *brd, int row, int col);
-bool applyOXOToRow (board *brd, int row, int col);
-bool applyOXOToCol (board *brd, int row, int col);
-bool applyCountingToRow (board *brd, int row, int col);
-bool applyCountingToCol (board *brd, int row, int col);
-
+bool applyOXOToRow(board *brd, int row, int col);
+bool applyOXOToCol(board *brd, int row, int col);
+bool applyCountingToRow(board *brd, int row);
+bool applyCountingToCol(board *brd, int col);
 
 void printboard(board *brd);
 // Retrieves the character from str that relates to row and col
@@ -41,33 +43,39 @@ bool str2board(board *brd, char *str)
 }
 
 void board2str(char *str, board *brd)
-{
-    if (brd->sz == 0)//for loop that turns board into string, and then pops a null character on the end. 
-    {
-      
-    }
-}
-
-bool solve_board(board *brd) //Once functions stop returning true, can cancel the third for loop. 
-{
-    bool haschanged = false;
-    // Checks for 'Pairs' rule
-    //printboard(brd);
+{ // for loop that turns board into string, and then pops a null character on the end.
     int row, col;
-    for (row = 0; row < brd->sz; row++) // Could use a dowhile loop instead of &&haschanged
+    char brdstr[brd->sz * brd->sz]; 
+    for (row = 0; row < brd->sz; row++)
     {
         for (col = 0; col < brd->sz; col++)
         {
-            applyPairsToRow(brd, row, col);
-            applyPairsToCol(brd, row, col);
-            applyOXOToRow(brd, row, col); 
-            applyOXOToCol(brd, row, col); 
-            applyCountingToRow(brd, row, col); 
-            applyCountingToRow(brd, row, col); 
+            brdstr[col+row*brd->sz] = brd->b2d[row][col]; 
+            printf("%s\n\0", brdstr);
         }
     }
-    printboard(brd); 
-    return true;
+    //brdstr[(brd->sz * brd->sz) + 1] = '\0';
+    strcpy(str,brdstr); 
+}
+
+bool solve_board(board *brd) // Once functions stop returning true, can cancel the third for loop.
+{
+    bool haschanged = false;
+    // Checks for 'Pairs' rule
+    // printboard(brd);
+    for (int row = 0; row < brd->sz; row++) // Could use a dowhile loop instead of &&haschanged
+    {
+        for (int col = 0; col < brd->sz; col++)
+        {
+            haschanged |= applyPairsToRow(brd, row, col);
+            haschanged |= applyPairsToCol(brd, row, col);
+            haschanged |= applyOXOToRow(brd, row, col);
+            haschanged |= applyOXOToCol(brd, row, col);
+            haschanged |= applyCountingToCol(brd, col);
+        }
+        haschanged |= applyCountingToRow(brd, row);
+    }
+    return haschanged;
 }
 
 char oppositeNumber(char x)
@@ -88,6 +96,7 @@ char oppositeNumber(char x)
 
 bool applyPairsToRow(board *brd, int row, int col)
 {
+    bool haschanged = false;
     /*These functions should eventually return true if cells have changed and false if not*/
 
     if (brd->b2d[row][col] == brd->b2d[row][col + 1])
@@ -95,123 +104,136 @@ bool applyPairsToRow(board *brd, int row, int col)
         if ((col > 0) && (brd->b2d[row][col - 1] == UNK))
         {
             brd->b2d[row][col - 1] = oppositeNumber(brd->b2d[row][col]);
+            haschanged = true;
         }
         if ((col < brd->sz) && (brd->b2d[row][col + 2] == UNK))
         {
             brd->b2d[row][col + 2] = oppositeNumber(brd->b2d[row][col]);
+            haschanged = true;
         }
     }
-    return true;
+    return haschanged;
 }
 
 bool applyPairsToCol(board *brd, int row, int col) // sort this outttttttt
 {
+    bool haschanged = false;
     if (brd->b2d[row][col] == brd->b2d[row + 1][col])
     {
         if ((row > 0) && (brd->b2d[row - 1][col] == UNK))
         {
             brd->b2d[row - 1][col] = oppositeNumber(brd->b2d[row][col]);
+            haschanged = true;
         }
         if ((row < brd->sz) && (brd->b2d[row + 2][col] == UNK))
         {
             brd->b2d[row + 2][col] = oppositeNumber(brd->b2d[row][col]);
-            
+            haschanged = true;
         }
     }
-    return true;
+
+    return haschanged;
 }
 
-bool applyOXOToRow (board *brd, int row, int col)
+bool applyOXOToRow(board *brd, int row, int col)
 {
-   if ((brd->b2d[row][col] == brd->b2d[row][col+2]) && (brd->b2d[row][col+1] == UNK)) 
-   {
-     brd->b2d[row][col+1] = oppositeNumber(brd->b2d[row][col+2]);
-   }     
-return true;    
-}
-
-bool applyOXOToCol (board *brd, int row, int col)
-{
-   if ((brd->b2d[row][col] == brd->b2d[row+2][col]) && (brd->b2d[row+1][col] == UNK)) 
-   {
-     brd->b2d[row+1][col] = oppositeNumber(brd->b2d[row+1][col]);
-   }     
-return true;         
-}
-
-bool applyCountingToRow (board *brd, int row, int col)
-{
-int onecounter = 0; 
-int zerocounter = 0; 
-
-  for(int i=0;i<col;i++)
-  {
-    if(brd->b2d[row+i][col] == ONE)
+    if ((brd->b2d[row][col] == brd->b2d[row][col + 2]) && (brd->b2d[row][col + 1] == UNK) && (row < brd->sz - 1))
     {
-      onecounter++;
-    } 
-    if(brd->b2d[row+i][col] == ZERO) 
-    { 
-      zerocounter++;
-    }  
-  }  
-   
-  for(int i = 0; i < brd->sz; i++) 
-  {
-    if(onecounter >= brd->sz/2)
-    { 
-      if(brd->b2d[row+i][col] == UNK)
-      {
-        brd->b2d[row+i][col] = ZERO;  
-      }
-    } 
-    if(zerocounter >= brd->sz/2)
-    { 
-      if(brd->b2d[row+i][col] == UNK)
-      {
-        brd->b2d[row+i][col] = ONE;  
-      }
+        brd->b2d[row][col + 1] = oppositeNumber(brd->b2d[row][col + 2]);
+        return true;
     }
-  }  
-return false; 
-}     
-   
-bool applyCountingToCol (board *brd, int row, int col)
-{
-int onecounter = 0; 
-int zerocounter = 0; 
+    return false;
+}
 
-  for(int i=0;i<row;i++)
-  {
-    if(brd->b2d[row][col+i] == ONE)
+bool applyOXOToCol(board *brd, int row, int col)
+{
+    if ((brd->b2d[row][col] == brd->b2d[row + 2][col]) && (brd->b2d[row + 1][col] == UNK) && (row < brd->sz - 1))
     {
-      onecounter++;
-    } 
-    if(brd->b2d[row][col+i] == ZERO) 
-    { 
-      zerocounter++;
-    }  
-  }  
-   
-  for(int i = 0; i < brd->sz; i++) 
-  {
-    if(onecounter >= brd->sz/2)
-    { 
-      if(brd->b2d[row][col+i] == UNK)
-      {
-        brd->b2d[row][col+i] = ZERO;  
-      }
-    } 
-    if(zerocounter >= brd->sz/2)
-    { 
-      if(brd->b2d[row][col+i] == UNK)
-      {
-        brd->b2d[row][col+i] = ONE;  
-      }
+        brd->b2d[row + 1][col] = oppositeNumber(brd->b2d[row + 1][col]);
+        return true;
     }
-  }  
-return false; 
-}     
+    return false;
+}
+
+bool applyCountingToCol(board *brd, int col)
+{
+    int onecounter = 0;
+    int zerocounter = 0;
+    bool haschanged = false;
+
+    for (int i = 0; i < brd->sz; i++)
+    {
+        if (brd->b2d[i][col] == ONE)
+        {
+            onecounter++;
+        }
+        if (brd->b2d[i][col] == ZERO)
+        {
+            zerocounter++;
+        }
+    }
+
+    for (int i = 0; i < brd->sz; i++)
+    {
+        if (onecounter >= brd->sz / 2)
+        {
+            if (brd->b2d[i][col] == UNK)
+            {
+                brd->b2d[i][col] = ZERO;
+                haschanged = true;
+            }
+        }
+        if (zerocounter >= brd->sz / 2)
+        {
+            if (brd->b2d[i][col] == UNK)
+            {
+                brd->b2d[i][col] = ONE;
+                haschanged = true;
+            }
+        }
+    }
+    return haschanged;
+}
+
+bool applyCountingToRow(board *brd, int row)
+{
+    int onecounter = 0;
+    int zerocounter = 0;
+    bool haschanged = false;
+
+    for (int col = 0; col < brd->sz; col++)
+    {
+        if (brd->b2d[row][col] == ONE)
+        {
+            onecounter++;
+        }
+        if (brd->b2d[row][col] == ZERO)
+        {
+            zerocounter++;
+        }
+    }
+
+    for (int i = 0; i < brd->sz; i++)
+    {
+        if (onecounter >= brd->sz / 2)
+        {
+            if (brd->b2d[row][i] == UNK)
+            {
+                brd->b2d[row][i] = ZERO;
+                haschanged = true;
+            }
+        }
+        if (zerocounter >= brd->sz / 2)
+        {
+            if (brd->b2d[row][i] == UNK)
+            {
+                brd->b2d[row][i] = ONE;
+                haschanged = true;
+            }
+        }
+    }
+    return haschanged;
+}
 
 void printboard(board *brd)
 {
@@ -226,9 +248,9 @@ void printboard(board *brd)
 }
 
 void test(void)
-{ 
-    //assert str2board with a string of 12 characters, it should fail due to sqrt. b.sz should equal 0. 
-    //assert(str2board(&b, "111111111111"));  
+{
+    // assert str2board with a string of 12 characters, it should fail due to sqrt. b.sz should equal 0.
+    // assert(str2board(&b, "111111111111"));
     assert(oppositeNumber(ONE) == ZERO);
     assert(oppositeNumber(ZERO) == ONE);
     assert(oppositeNumber(UNK) == UNK);
@@ -236,28 +258,35 @@ void test(void)
     b.sz = 0;
     char str[0];
     assert(str2board(&b, ".11.00..0......."));
-    assert(b.sz == 4); 
+    assert(b.sz == 4);
     assert(applyPairsToCol(&b, 1, 0) == true);
-    assert(applyOXOToRow(&b, 1, 1) == true); 
-    //assert(b.b2d[0][0] == ONE);
-    //assert(b.b2d[3][0] == ONE);
-    printboard(&b);
+    assert(applyOXOToRow(&b, 1, 1) == false);
+    assert(b.b2d[0][0] == ONE);
+    assert(b.b2d[3][0] == ONE);
     assert(str2board(&b, ".0.."));
     assert(b.sz == 2);
-    //assert(b.b2d[0][0] == UNK);
-    //assert(b.b2d[0][1] == UNK);
-    //assert(b.b2d[1][0] == ZERO);
-    //assert(b.b2d[1][1] == UNK);
+    assert(b.b2d[0][0] == UNK);
+    assert(b.b2d[0][1] == ZERO);
+    assert(b.b2d[1][0] == UNK);
+    assert(b.b2d[1][1] == UNK);
+    // assert(solve_board(&b) == true);
+    // printboard(&b);
+    assert(b.b2d[0][0] == UNK);
+    assert(b.b2d[0][1] == ZERO);
+    assert(b.b2d[1][0] == UNK);
+    assert(b.b2d[1][1] == UNK);
+    // board2str(str, &b);
+    assert(applyCountingToRow(&b, 0) == true);
+    // assert(solve_board(&b) == true);
+    assert(b.b2d[0][0] == ONE);
+    assert(b.b2d[0][1] == ZERO);
+    assert(b.b2d[1][0] == UNK);
+    assert(b.b2d[1][1] == UNK);
     assert(solve_board(&b) == true);
-    board2str(str, &b);
+    assert(solve_board(&b) == false);
+    (board2str(str, &b));
+    printf("%s\n", str); 
+    printf("%c %c %c %c\n", b.b2d[0][0], b.b2d[0][1], b.b2d[1][0], b.b2d[1][1]);
+    printf("%i\n", strcmp(str, "1001")); 
     assert(strcmp(str, "1001") == 0);
 }
-
-// int main(void)
-// {
-//     printf("Hi\n");
-//     board board;
-//     printf("%i\n", board.sz);
-//     printf("%i\n", board.b2d[0][MAX - 1]);
-//     return 0;
-// }
