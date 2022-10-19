@@ -50,12 +50,11 @@ void board2str(char *str, board *brd)
     {
         for (col = 0; col < brd->sz; col++)
         {
-            brdstr[col+row*brd->sz] = brd->b2d[row][col]; 
-            printf("%s\n\0", brdstr);
+            *(str + col + row * brd->sz) = brd->b2d[row][col]; 
         }
     }
-    //brdstr[(brd->sz * brd->sz) + 1] = '\0';
-    strcpy(str,brdstr); 
+     *(str + col + row * brd->sz) = '\0'; 
+     printf("%s", str); 
 }
 
 bool solve_board(board *brd) // Once functions stop returning true, can cancel the third for loop.
