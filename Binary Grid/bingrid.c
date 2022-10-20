@@ -61,27 +61,38 @@ void board2str(char *str, board *brd)
     }
     printf("%d\n", brd->sz);
     str[k] = '\0';
-    printf("%s", str);
+    
 }
 
-bool solve_board(board *brd) // Once functions stop returning true, can cancel the third for loop.
+bool solve_board(board *brd) // Runs until no changes have been made in any given loop
 {
+    bool completed = false;
     bool haschanged = false;
-    // Checks for 'Pairs' rule
-    // printboard(brd);
-    for (int row = 0; row < brd->sz; row++) // Could use a dowhile loop instead of &&haschanged
+    while (completed == false)
     {
-        for (int col = 0; col < brd->sz; col++)
+        for (int row = 0; row < brd->sz; row++)
         {
-            haschanged |= applyPairsToRow(brd, row, col);
-            haschanged |= applyPairsToCol(brd, row, col);
-            haschanged |= applyOXOToRow(brd, row, col);
-            haschanged |= applyOXOToCol(brd, row, col);
-            haschanged |= applyCountingToCol(brd, col);
+            for (int col = 0; col < brd->sz; col++)
+            {
+                haschanged |= applyPairsToRow(brd, row, col);
+                haschanged |= applyPairsToCol(brd, row, col);
+                haschanged |= applyOXOToRow(brd, row, col);
+                haschanged |= applyOXOToCol(brd, row, col);
+                haschanged |= applyCountingToCol(brd, col);
+            }
+            haschanged |= applyCountingToRow(brd, row);
         }
-        haschanged |= applyCountingToRow(brd, row);
+        if (haschanged == true)
+
+        {
+            haschanged = false;
+        }
+        else
+        {
+            completed = true;
+        }
     }
-    return haschanged;
+    return completed;
 }
 
 char oppositeNumber(char x)
@@ -290,8 +301,6 @@ void test(void)
     assert(b.b2d[1][0] == UNK);
     assert(b.b2d[1][1] == UNK);
     assert(solve_board(&b) == true);
-    assert(solve_board(&b) == false);
     (board2str(str, &b));
-
     assert(strcmp(str, "1001") == 0);
 }
