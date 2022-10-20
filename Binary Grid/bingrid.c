@@ -48,16 +48,19 @@ bool str2board(board *brd, char *str)
 void board2str(char *str, board *brd)
 { // for loop that turns board into string, and then pops a null character on the end.
     int row, col;
-    int k = 0;  
+    int k = 0;
     for (row = 0; row < brd->sz; row++)
     {
         for (col = 0; col < brd->sz; col++)
         {
-            str[k++] = brd->b2d[row][col];
-            str[k+1] = '\0';
-            printf("%i\n", k); 
+            str[k] = brd->b2d[row][col];
+            k++;
+            str[k] = '\0';
+            printf("%s\n", str);
         }
     }
+    printf("%d\n", brd->sz);
+    str[k] = '\0';
     printf("%s", str);
 }
 
@@ -258,9 +261,8 @@ void test(void)
     assert(oppositeNumber(ZERO) == ONE);
     assert(oppositeNumber(UNK) == UNK);
     board b;
-    b.sz = 0;
+    b.sz = 4;
     char str[BOARDSTR];
-    board2str(str, &b);
 
     assert(str2board(&b, ".11.00..0......."));
     assert(b.sz == 4);
@@ -290,7 +292,6 @@ void test(void)
     assert(solve_board(&b) == true);
     assert(solve_board(&b) == false);
     (board2str(str, &b));
-    
 
     assert(strcmp(str, "1001") == 0);
 }
