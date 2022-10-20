@@ -1,7 +1,10 @@
 #include "bingrid.h"
-//While loop that stops when haschanged = false.
-//In solve board - need a 'has there been an overall change, and has there been a change in this run. Stop when there hasnt been a change and return when there has been a change.  
-//At the end of board to string need to cut off the end(truncate) to make the string a certain size. 
+
+#define BOARDSTR (MAX * MAX + 1)
+
+// While loop that stops when haschanged = false.
+// In solve board - need a 'has there been an overall change, and has there been a change in this run. Stop when there hasnt been a change and return when there has been a change.
+// At the end of board to string need to cut off the end(truncate) to make the string a certain size.
 
 bool applyPairsToRow(board *brd, int row, int col);
 bool applyPairsToCol(board *brd, int row, int col);
@@ -45,16 +48,17 @@ bool str2board(board *brd, char *str)
 void board2str(char *str, board *brd)
 { // for loop that turns board into string, and then pops a null character on the end.
     int row, col;
-    char brdstr[brd->sz * brd->sz]; 
+    int k = 0;  
     for (row = 0; row < brd->sz; row++)
     {
         for (col = 0; col < brd->sz; col++)
         {
-            *(str + col + row * brd->sz) = brd->b2d[row][col]; 
+            str[k++] = brd->b2d[row][col];
+            str[k+1] = '\0';
+            printf("%i\n", k); 
         }
     }
-     *(str + col + row * brd->sz) = '\0'; 
-     printf("%s", str); 
+    printf("%s", str);
 }
 
 bool solve_board(board *brd) // Once functions stop returning true, can cancel the third for loop.
@@ -255,7 +259,9 @@ void test(void)
     assert(oppositeNumber(UNK) == UNK);
     board b;
     b.sz = 0;
-    char str[0];
+    char str[BOARDSTR];
+    board2str(str, &b);
+
     assert(str2board(&b, ".11.00..0......."));
     assert(b.sz == 4);
     assert(applyPairsToCol(&b, 1, 0) == true);
@@ -284,8 +290,7 @@ void test(void)
     assert(solve_board(&b) == true);
     assert(solve_board(&b) == false);
     (board2str(str, &b));
-    printf("%s\n", str); 
-    printf("%c %c %c %c\n", b.b2d[0][0], b.b2d[0][1], b.b2d[1][0], b.b2d[1][1]);
-    printf("%i\n", strcmp(str, "1001")); 
+    
+
     assert(strcmp(str, "1001") == 0);
 }
