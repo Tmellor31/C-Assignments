@@ -1,0 +1,19 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define SIZE 6
+
+int main(void)
+{
+    char park[SIZE][SIZE] = {{'#', '.', '#', '#', '#', '#'}, {'.', 'B', 'B', 'B', '.', '#'}, {'#', 'A', '.', '.', '.', '#'}, {'#', 'A', '.', '.', '.', '#'}, {'#', 'A', '.', '.', '.', '#'}, {'#', '#', '#', '#', '#', '#'}};
+    for (int row = 0; row < SIZE; row++)
+    {
+        for(int col = 0; col < SIZE; col++)
+        {
+          printf("%c", park [row][col]);
+        }
+        printf ("\n"); 
+    }
+    printf("\n");
+    return 0;
+}

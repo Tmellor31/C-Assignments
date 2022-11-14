@@ -315,4 +315,9 @@ void test(void)
     assert(solve_board(&b) == true);
     board2str(str, &b);
     assert(strcmp(str, "101010100101010101111010000011001100") == 0);
+
+    assert(str2board(&b, "0.............0.00...1.....00.......0.....0..1.......00........."));
+    assert(applyPairsToRow
+    board2str(str, &b);
+    assert(strcmp(str, "0101011010011001001011010110011010010011110011000110100110110010") == 0);
 }
