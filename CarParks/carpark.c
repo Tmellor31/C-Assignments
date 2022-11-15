@@ -2,15 +2,15 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <assert.h>
-#include <string.h> 
+#include <string.h>
 #include <math.h>
 #include <ctype.h>
-
 
 #define MAX_PARK_SIZE 20
 #define SIZE 6
 #define BOLLARD '#'
 #define SPACE '.'
+#define MAX_CARS 26
 
 struct CarPark
 {
@@ -19,14 +19,79 @@ struct CarPark
 };
 typedef struct CarPark CarPark;
 
+struct Car
+{
+  int length;
+  bool orientation;
+  char label;
+  int startrow;
+  int startcol;
+};
+typedef struct Car Car;
+// make orientation an enum - for now true = vertical, false = horizontal
+
+struct CarList
+{
+  Car cars[MAX_CARS];
+  int total;
+};
+typedef struct CarList CarList;
+
 void printpark(CarPark *park);
 bool vehiclecheck(CarPark *park);
 void test(void);
+bool printcell(CarPark *park, int row, int col);
+bool findcars(CarList *car_list, CarPark *park);
+int find_car_position(CarList *car_list, char letter);
+void make_car(Car *car, int length, char label, int startrow, int startcol);
 
 int main(void)
 {
   test();
   return 0;
+}
+
+int find_car_position(CarList *car_list, char letter)
+{
+  for (int index = 0; index < MAX_CARS; index++)
+  {
+    if (car_list->cars[index].label == letter)
+    {
+      return index;
+    }
+  }
+  return -1;
+}
+
+bool findcars(CarList *car_list, CarPark *park)
+{
+  for (int row = 0; row < park->size; row++)
+  {
+    for (int col = 0; col < park->size; col++)
+    {
+      if (park->layout[row][col] != BOLLARD && park->layout[row][col] != SPACE)
+      {
+        int car_position = find_car_position(car_list, park->layout[row][col]);
+        if (car_position == -1)
+        {
+          make_car(&(car_list->cars[car_list->total]), 1, park->layout[row][col], row, col);
+        }
+        else
+        {
+          (car_list->cars[car_position].length)++;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+void make_car(Car *car, int length, char label, int startrow, int startcol)
+{
+  car->length = length;
+  car->label = label;
+  car->startrow = startrow;
+  car->startcol = startcol;
 }
 
 void printpark(CarPark *park)
@@ -60,6 +125,21 @@ bool vehiclecheck(CarPark *park)
   return false;
 }
 
+bool iterate(CarPark *park, bool (*callback)(CarPark *park, int row, int col))
+{ // Function that is used throughout the program to check or edit the car park.
+  for (int row = 0; row < SIZE; row++)
+  {
+    for (int col = 0; col < SIZE; col++)
+    {
+      if (callback(park, row, col))
+      {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 bool strtopark(CarPark *park, char *str)
 {
   if (strlen(str) == 0)
@@ -83,11 +163,18 @@ bool strtopark(CarPark *park, char *str)
   return true;
 }
 
+bool printcell(CarPark *park, int row, int col)
+{ // todo: add a if statement that adds a \n after each row
+  printf("%c", park->layout[row][col]);
+  return true;
+}
+
 void test(void)
 {
   CarPark park;
   strtopark(&park, "#.####.BBB.##A...##A...##A...#######");
-  printpark(&park);
+  // printpark(&park);
+  iterate(&park, &printcell);
 }
 
 // Use a while loop, compare the initial car park with the possible vehicle moves, and add any possible children to the end of the list.
