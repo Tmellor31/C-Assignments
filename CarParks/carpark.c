@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
   char c = fgetc(fpin);
   while (c != EOF)
   {
-    printf("%c", c); 
+    printf("%c\n", c); 
     c = fgetc(fpin);
   }
    
