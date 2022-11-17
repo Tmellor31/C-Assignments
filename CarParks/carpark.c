@@ -11,6 +11,7 @@
 #define BOLLARD '#'
 #define SPACE '.'
 #define MAX_CARS 26
+#define MAX_CARPARKS 50 
 
 // cars must be of length 2
 // use fscanf to populate the grid
@@ -43,6 +44,15 @@ struct CarList
 };
 typedef struct CarList CarList;
 
+struct CarParkTree
+{
+  CarPark carparks[MAX_CARPARKS];
+  int total; 
+};
+typedef struct CarParkTree CarParkTree; 
+
+
+
 void printpark(CarPark *park);
 bool vehiclecheck(CarPark *park);
 void test(void);
@@ -50,9 +60,10 @@ bool printcell(CarPark *park, int row, int col);
 bool findcars(CarList *car_list, CarPark *park);
 int find_car_position(CarList *car_list, char letter);
 Car make_car(int length, char label, int startrow, int startcol);
-bool move_car_vertically(Car *car, CarPark *park);
-bool move_car_horizontally(Car *car, CarPark *park);
+int move_car_vertically(Car *car, CarPark *park);
+int move_car_horizontally(Car *car, CarPark *park);
 void update_car(Car *car, CarPark *park, int row, int col);
+CarParkTree make_car_park_tree(void)
 CarList make_car_list(void);
 
 int main(int argc, char *argv[])
@@ -94,67 +105,54 @@ int main(int argc, char *argv[])
   char *fgets(str, FILE * )
 }*/
 
-bool move_car_vertically(Car *car, CarPark *park)
+CarParkTree make_car_park_tree(void)
+{
+  CarParkTree park_tree; 
+  park_tree.total = 0; 
+  return park_tree;  
+}
+
+int move_car_vertically(Car *car, CarPark *park)
 {
   int rowposition = car->startrow;
   int colposition = car->startcol;
   char letter = car->label;
+  int moveflags = 0;
   if (car->orientation == true)
 
   {
     if (park->layout[rowposition - 1][colposition] == SPACE)
-    {
-      for (int i = 0; i < car->length; i++)
-      {
-        // for vertical car moving upwards
-        park->layout[rowposition + i][colposition] = letter;
-        park->layout[rowposition - i][colposition] = SPACE;
-        return true;
-      }
+    { // can move up
+      moveflags += 1;
     }
-    if (park->layout[rowposition + 1][colposition] == SPACE)
-    {
-      for (int i = 0; i < car->length; i++)
-      {
-        // for vertical car moving downwards
-        park->layout[rowposition - i][colposition] = letter;
-        park->layout[rowposition + i][colposition] = SPACE;
-        return true;
-      }
+    if (park->layout[rowposition + car->length][colposition] == SPACE)
+    { // can move down
+      moveflags += 2;
     }
   }
-  return false;
+  return moveflags;
 }
 
-bool move_car_horizontally(Car *car, CarPark *park)
+int move_car_horizontally(Car *car, CarPark *park)
 {
   int rowposition = car->startrow;
   int colposition = car->startcol;
   char letter = car->label;
+  int moveflags = 0;
   if (car->orientation == false)
   {
+    printf("%c\n", park->layout[rowposition][colposition - 1]);
+    printf("%c\n", park->layout[rowposition][colposition + 1]);
     if (park->layout[rowposition][colposition - 1] == SPACE)
-    {
-      for (int i = 0; i < car->length; i++)
-      {
-        // for horizontal car moving left
-        park->layout[rowposition][colposition - i] = letter;
-        park->layout[rowposition][colposition + i] = SPACE;
-        return true;
-      }
+    { // can move left
+      moveflags += 1;
     }
-    if (park->layout[rowposition][colposition + 1] == SPACE)
-    {
-      for (int i = 0; i < car->length; i++)
-      {
-        // for horizontal car moving right
-        park->layout[rowposition + i][colposition] = letter;
-        park->layout[rowposition - i][colposition] = SPACE;
-        return true;
-      }
+    if (park->layout[rowposition][colposition + car->length] == SPACE)
+    { // can move right
+      moveflags += 2;
     }
   }
-  return false;
+  return moveflags;
 }
 
 int find_car_position(CarList *car_list, char letter)
@@ -181,7 +179,8 @@ bool findcars(CarList *car_list, CarPark *park)
         int car_position = find_car_position(car_list, park->layout[row][col]);
         if (car_position == -1)
         {
-          // car_list->cars[car_list->total] = make_car(1, park->layout[row][col], row, col);
+          car_list->cars[car_list->total] = make_car(1, park->layout[row][col], row, col);
+          car_list->total++;
         }
         else
         {
@@ -195,9 +194,9 @@ bool findcars(CarList *car_list, CarPark *park)
 
 CarList make_car_list(void)
 {
-  CarList car_list; 
-  car_list.total = 0; 
-  return car_list; 
+  CarList car_list;
+  car_list.total = 0;
+  return car_list;
 }
 
 Car make_car(int length, char label, int startrow, int startcol)
@@ -215,11 +214,11 @@ void update_car(Car *car, CarPark *park, int row, int col)
   (car->length)++;
   if (park->layout[row][col] == park->layout[row - 1][col])
   {
-    car->orientation = false;
+    car->orientation = true;
   }
   if (park->layout[row][col] == park->layout[row][col - 1])
   {
-    car->orientation = true;
+    car->orientation = false;
   }
 }
 
@@ -301,7 +300,7 @@ bool printcell(CarPark *park, int row, int col)
 void test(void)
 {
 
-  CarList cars;
+  CarList car_list = make_car_list();
   CarPark park;
   CarPark park2;
 
@@ -309,11 +308,15 @@ void test(void)
   strtopark(&park2, "#.####.BBB.##A...##A...##A...#######");
   assert(printcell(&park, 6, 6) == true);
   assert(vehiclecheck(&park) == true);
-  // assert(findcars(&cars, &park) == true);
-  printf("%i\n", cars.total);
-  assert(cars.total == 2);
-  assert(find_car_position(&cars, 'B') == 0);
-  assert(find_car_position(&cars, 'A') == 1);
+  assert(findcars(&car_list, &park) == true);
+  assert(car_list.total == 2);
+  assert(find_car_position(&car_list, 'B') == 0);
+  assert(find_car_position(&car_list, 'A') == 1);
+  assert(car_list.cars[0].orientation == false);
+  assert(move_car_vertically(&(car_list.cars[0]), &park) == 0);
+  assert(move_car_horizontally(&(car_list.cars[0]), &park) == 3);
+  assert(move_car_horizontally(&(car_list.cars[1]), &park) == 0);
+  assert(move_car_vertically(&(car_list.cars[1]), &park) == 0);
   // printpark(&park);
   iterate(&park, &printcell);
   strtopark(&park, "#.####.....##....##....##....#######");
