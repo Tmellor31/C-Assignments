@@ -11,7 +11,7 @@
 #define BOLLARD '#'
 #define SPACE '.'
 #define MAX_CARS 26
-#define MAX_CARPARKS 50 
+#define MAX_CARPARKS 50
 
 // cars must be of length 2
 // use fscanf to populate the grid
@@ -47,11 +47,9 @@ typedef struct CarList CarList;
 struct CarParkTree
 {
   CarPark carparks[MAX_CARPARKS];
-  int total; 
+  int total;
 };
-typedef struct CarParkTree CarParkTree; 
-
-
+typedef struct CarParkTree CarParkTree;
 
 void printpark(CarPark *park);
 bool vehiclecheck(CarPark *park);
@@ -63,7 +61,7 @@ Car make_car(int length, char label, int startrow, int startcol);
 int move_car_vertically(Car *car, CarPark *park);
 int move_car_horizontally(Car *car, CarPark *park);
 void update_car(Car *car, CarPark *park, int row, int col);
-CarParkTree make_car_park_tree(void)
+CarParkTree make_car_park_tree(void);
 CarList make_car_list(void);
 
 int main(int argc, char *argv[])
@@ -100,16 +98,21 @@ int main(int argc, char *argv[])
   return EXIT_SUCCESS;
 }
 
-/*bool read_park_from_file (CarPark *park)
-{
-  char *fgets(str, FILE * )
-}*/
+//Things to do:Add enums for orientation and constants, change size to be height and width read from file, change file reading to be its own function, 
+//and make a start on below 
+
+//CarPark *park = carparktree.car_parks[0];
+//- Add parent to CarPark
+//- Create create_child_carparks function that takes a CarPark and CarList and creates a new CarPark for each possible move of each Car. These CarParks need to be added to CarParkTree with reference to their parent
+//- Create generate_carpark_tree which keeps creating CarParks until a CarPark exists which doesn't contiain Cars
+//- Carparks must be unique 
+
 
 CarParkTree make_car_park_tree(void)
 {
-  CarParkTree park_tree; 
-  park_tree.total = 0; 
-  return park_tree;  
+  CarParkTree park_tree;
+  park_tree.total = 0;
+  return park_tree;
 }
 
 int move_car_vertically(Car *car, CarPark *park)
@@ -167,6 +170,8 @@ int find_car_position(CarList *car_list, char letter)
   }
   return -1;
 }
+
+
 
 bool findcars(CarList *car_list, CarPark *park)
 {
@@ -299,29 +304,28 @@ bool printcell(CarPark *park, int row, int col)
 
 void test(void)
 {
-
+  CarParkTree carparktree = make_car_park_tree();
   CarList car_list = make_car_list();
-  CarPark park;
   CarPark park2;
-
-  strtopark(&park, "#.####.BBB.##A...##A...##A...#######");
+  strtopark(&(carparktree.carparks[0]), "#.####.BBB.##A...##A...##A...#######");
   strtopark(&park2, "#.####.BBB.##A...##A...##A...#######");
-  assert(printcell(&park, 6, 6) == true);
-  assert(vehiclecheck(&park) == true);
-  assert(findcars(&car_list, &park) == true);
+  CarPark *park = &(carparktree.carparks[0]);
+  assert(printcell(park, 6, 6) == true);
+  assert(vehiclecheck(park) == true);
+  assert(findcars(&car_list, park) == true);
   assert(car_list.total == 2);
   assert(find_car_position(&car_list, 'B') == 0);
   assert(find_car_position(&car_list, 'A') == 1);
   assert(car_list.cars[0].orientation == false);
-  assert(move_car_vertically(&(car_list.cars[0]), &park) == 0);
-  assert(move_car_horizontally(&(car_list.cars[0]), &park) == 3);
-  assert(move_car_horizontally(&(car_list.cars[1]), &park) == 0);
-  assert(move_car_vertically(&(car_list.cars[1]), &park) == 0);
+  assert(move_car_vertically(&(car_list.cars[0]), park) == 0);
+  assert(move_car_horizontally(&(car_list.cars[0]), park) == 3);
+  assert(move_car_horizontally(&(car_list.cars[1]), park) == 0);
+  assert(move_car_vertically(&(car_list.cars[1]), park) == 0);
   // printpark(&park);
-  iterate(&park, &printcell);
-  strtopark(&park, "#.####.....##....##....##....#######");
+  iterate(park, &printcell);
+  strtopark(park, "#.####.....##....##....##....#######");
   // assert(find_car_position(&cars, 'B') == -1);
-  assert(vehiclecheck(&park) == false);
+  assert(vehiclecheck(park) == false);
   assert(vehiclecheck(&park2) == true);
 }
 
