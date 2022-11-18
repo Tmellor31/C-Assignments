@@ -16,9 +16,11 @@
 // cars must be of length 2
 // use fscanf to populate the grid
 // the file the user wants to use is always the last one entered - argv
+// add a parent field to the Carpark
 
 struct CarPark
 {
+  int parent;
   char layout[MAX_PARK_SIZE][MAX_PARK_SIZE];
   int height;
   int width;
@@ -34,7 +36,6 @@ struct Car
   int startcol;
 };
 typedef struct Car Car;
-// make orientation an enum - for now true = vertical, false = horizontal
 
 struct CarList
 {
@@ -68,27 +69,37 @@ int move_car_horizontally(Car *car, CarPark *park);
 void update_car(Car *car, CarPark *park, int row, int col);
 CarParkTree make_car_park_tree(void);
 CarList make_car_list(void);
+bool create_car_park_children(CarParkTree *parktree, CarList *list, int position);
+CarPark generate_carpark(CarPark *park, Car *car, int change);
+void loadpark(char filename[], CarPark *park);
 
 int main(int argc, char *argv[])
 {
   test();
+  if (argc != 2)
+  {
+    fprintf(stderr, "Usage : %s <file>\n", argv[0]);
+    exit(EXIT_FAILURE);
+  }
+  CarPark park;
+  loadpark(argv[1], &park);
+  bool result = solvepark(&park);
+  return result;
+}
+
+void loadpark(char filename[], CarPark *park)
+{
   int count;
-  FILE *fpin = fopen(argv[1], "r");
+  FILE *fpin = fopen(filename, "r");
 
   if (fpin == NULL)
   {
     printf("Cannot open file\n");
     exit(EXIT_FAILURE);
   }
-
-  if (argc != 2)
-  {
-    fprintf(stderr, "Usage : %s <file>\n", argv[0]);
-    exit(EXIT_FAILURE);
-  }
   if (!fpin)
   {
-    fprintf(stderr, "Cannot read from %s\n", argv[1]);
+    fprintf(stderr, "Cannot read from %s\n", filename);
     exit(EXIT_FAILURE);
   }
 
@@ -107,8 +118,6 @@ int main(int argc, char *argv[])
     }*/
     c = fgetc(fpin);
   }
-
-  printf("test");
   fclose(fpin);
   return EXIT_SUCCESS;
 }
@@ -139,17 +148,32 @@ bool create_car_park_children(CarParkTree *parktree, CarList *list, int position
     bool canmoveleft = horizontalstatus & 1;
     int verticalstatus = move_car_vertically(car, carpark);
     bool canmoveright = horizontalstatus & 2;
+    bool canmoveup = verticalstatus & 1;
+    bool canmovedown = verticalstatus & 2;
     if (canmoveleft)
     {
-      createpark()
+      parktree->carparks[parktree->total] = generate_carpark(carpark, car, 0);
+      parktree->total++;
     }
-
+    if (canmoveright)
     {
+      parktree->carparks[parktree->total] = generate_carpark(carpark, car, 1);
+      parktree->total++;
+    }
+    if (canmoveup)
+    {
+      parktree->carparks[parktree->total] = generate_carpark(carpark, car, 2);
+      parktree->total++;
+    }
+    if (canmovedown)
+    {
+      parktree->carparks[parktree->total] = generate_carpark(carpark, car, 3);
+      parktree->total++;
     }
   }
 }
 
-CarPark generate_carpark(CarPark *park, Car *car, int change)
+CarPark generate_carpark(CarPark *park, Car *car, int change) // make int change an enum
 {
   CarPark newcarpark;
   newcarpark.width = park->width;
@@ -161,11 +185,64 @@ CarPark generate_carpark(CarPark *park, Car *car, int change)
       switch (change)
       {
       case 0:
-      //move left 
-      if (row == car->startrow)
+        // move left
+        if ((row == car->startrow) && (col == car->startcol - 1))
+        {
+          newcarpark.layout[row][col] = car->label;
+        }
+        else if ((row == car->startrow) && (col == car->startcol + car->length))
+        {
+          newcarpark.layout[row][col] = SPACE;
+        }
+        else
+        {
+          newcarpark.layout[row][col] = park->layout[row][col];
+        }
         break;
-      
-      default:
+
+      case 1:
+        // move right
+        if ((row == car->startrow) && (col == car->startcol + 1))
+        {
+          newcarpark.layout[row][col] = car->label;
+        }
+        else if ((row == car->startrow) && (col == car->startcol - car->length))
+        {
+          newcarpark.layout[row][col] = SPACE;
+        }
+        else
+        {
+          newcarpark.layout[row][col] = park->layout[row][col];
+        }
+        break;
+      case 2:
+        // move up
+        if ((row == car->startrow + 1) && (col == car->startcol))
+        {
+          newcarpark.layout[row][col] = car->label;
+        }
+        else if ((row == car->startrow - car->length) && (col == car->startcol))
+        {
+          newcarpark.layout[row][col] = SPACE;
+        }
+        else
+        {
+          newcarpark.layout[row][col] = park->layout[row][col];
+        }
+        break;
+      case 3:
+        if ((row == car->startrow - 1) && (col == car->startcol))
+        {
+          newcarpark.layout[row][col] = car->label;
+        }
+        else if ((row == car->startrow + car->length) && (col == car->startcol))
+        {
+          newcarpark.layout[row][col] = SPACE;
+        }
+        else
+        {
+          newcarpark.layout[row][col] = park->layout[row][col];
+        }
         break;
       }
     }
