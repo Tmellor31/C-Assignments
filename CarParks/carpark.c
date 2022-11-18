@@ -76,50 +76,67 @@ void loadpark(char filename[], CarPark *park);
 int main(int argc, char *argv[])
 {
   test();
-  if (argc != 2)
+  if (argc < 2)
   {
-    fprintf(stderr, "Usage : %s <file>\n", argv[0]);
+    fprintf(stderr, "Usage : %s (-showifwanted) <file>\n", argv[0]);
     exit(EXIT_FAILURE);
   }
   CarPark park;
-  loadpark(argv[1], &park);
-  bool result = solvepark(&park);
-  return result;
+  printf("%i\n", argc);
+  loadpark(argv[argc - 1], &park);
+  // if (argv [1] == '-show')
+  //{
+  //  print all steps
+  //}
+  // else
+  //{
+  // print just the steps taken to solve the park
+  //}
+  return 0;
 }
 
 void loadpark(char filename[], CarPark *park)
 {
   int count;
-  FILE *fpin = fopen(filename, "r");
-
-  if (fpin == NULL)
+  FILE *fp = fopen(filename, "r");
+  if (fp == NULL)
   {
-    printf("Cannot open file\n");
+    printf("Cannot open %s\n", filename);
     exit(EXIT_FAILURE);
   }
-  if (!fpin)
+  if (!fp)
   {
     fprintf(stderr, "Cannot read from %s\n", filename);
     exit(EXIT_FAILURE);
   }
 
-  char c = fgetc(fpin);
-  while (c != EOF)
+  char c;
+  int line = 0;
+  int i = 0;
+
+  while ((c = fgetc(fp)) != EOF)
   {
-    printf("%c\n", c);
     count++;
-    /*if (count == 1)
+    if (count == 1)
     {
-      carpark.width = c;
+      park->width = c;
     }
     if (count == 3)
     {
-      carpark.height = c;
-    }*/
-    c = fgetc(fpin);
+      park->height = c;
+    }
+    if (c == '\n')
+    {
+      park->layout[line++][i] = '\0';
+      i = 0;
+    }
+    else
+    {
+      park->layout[line][i++] = c;
+    }
+    printf("%c\n", c);
   }
-  fclose(fpin);
-  return EXIT_SUCCESS;
+  fclose(fp);
 }
 
 // Things to do:Change size to be height and width read from file, change file reading to be its own function,
@@ -307,9 +324,9 @@ int find_car_position(CarList *car_list, char letter)
 
 bool findcars(CarList *car_list, CarPark *park)
 {
-  for (int row = 0; row < park->size; row++)
+  for (int row = 0; row < park->height; row++)
   {
-    for (int col = 0; col < park->size; col++)
+    for (int col = 0; col < park->width; col++)
     {
       if (park->layout[row][col] != BOLLARD && park->layout[row][col] != SPACE)
       {
@@ -405,7 +422,7 @@ bool iterate(CarPark *park, bool (*callback)(CarPark *park, int row, int col))
   return false;
 }
 
-bool strtopark(CarPark *park, char *str)
+/*bool strtopark(CarPark *park, char *str)
 {
   if (strlen(str) == 0)
   {
@@ -416,17 +433,16 @@ bool strtopark(CarPark *park, char *str)
     return false;
   }
 
-  park->size = sqrt(strlen(str));
   int row, col;
-  for (row = 0; row < park->size; row++)
+  for (row = 0; row < park->height; row++)
   {
-    for (col = 0; col < park->size; col++)
+    for (col = 0; col < park->width; col++)
     {
       park->layout[row][col] = str[col + (row * park->size)];
     }
   }
   return true;
-}
+}*/
 
 bool printcell(CarPark *park, int row, int col)
 { // todo: add a if statement that adds a \n after each row
@@ -439,8 +455,8 @@ void test(void)
   CarParkTree carparktree = make_car_park_tree();
   CarList car_list = make_car_list();
   CarPark park2;
-  strtopark(&(carparktree.carparks[0]), "#.####.BBB.##A...##A...##A...#######");
-  strtopark(&park2, "#.####.BBB.##A...##A...##A...#######");
+  // strtopark(&(carparktree.carparks[0]), "#.####.BBB.##A...##A...##A...#######");
+  // strtopark(&park2, "#.####.BBB.##A...##A...##A...#######");
   CarPark *park = &(carparktree.carparks[0]);
   assert(printcell(park, 6, 6) == true);
   assert(vehiclecheck(park) == true);
@@ -455,8 +471,8 @@ void test(void)
   assert(move_car_vertically(&(car_list.cars[1]), park) == 0);
   // printpark(&park);
   iterate(park, &printcell);
-  strtopark(park, "#.####.....##....##....##....#######");
-  // assert(find_car_position(&cars, 'B') == -1);
+  // strtopark(park, "#.####.....##....##....##....#######");
+  //  assert(find_car_position(&cars, 'B') == -1);
   assert(vehiclecheck(park) == false);
   assert(vehiclecheck(&park2) == true);
 }
