@@ -58,7 +58,7 @@ typedef enum
 } Orientation;
 
 void printpark(CarPark *park);
-bool vehiclecheck(CarPark *park);
+bool parkhascars(CarPark *park);
 void test(void);
 bool printcell(CarPark *park, int row, int col);
 bool findcars(CarList *car_list, CarPark *park);
@@ -70,8 +70,11 @@ void update_car(Car *car, CarPark *park, int row, int col);
 CarParkTree make_car_park_tree(void);
 CarList make_car_list(void);
 bool create_car_park_children(CarParkTree *parktree, CarList *list, int position);
-CarPark generate_carpark(CarPark *park, Car *car, int change);
-void loadpark(char filename[], CarPark *park);
+CarPark generate_carpark(CarPark *park, Car *car, int change, int parentid);
+CarParkTree loadpark(char filename[], CarPark *park);
+bool isParkUnique(CarParkTree *tree, CarPark *park);
+bool arecarparks_equal(CarPark *park, CarPark *other);
+int solve_carpark(CarParkTree *tree);
 
 int main(int argc, char *argv[])
 {
@@ -95,7 +98,7 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-void loadpark(char filename[], CarPark *park)
+CarParkTree loadpark(char filename[], CarPark *park)
 {
   int count;
   FILE *fp = fopen(filename, "r");
@@ -114,34 +117,36 @@ void loadpark(char filename[], CarPark *park)
   int line = 0;
   int i = 0;
 
+  CarPark carpark;
+  carpark.parent = -1;
   while ((c = fgetc(fp)) != EOF)
   {
     count++;
     if (count == 1)
     {
-      park->width = c;
+      carpark.width = c;
     }
     if (count == 3)
     {
-      park->height = c;
+      carpark.height = c;
     }
     if (c == '\n')
     {
-      park->layout[line++][i] = '\0';
+      carpark.layout[line++][i] = '\0';
       i = 0;
     }
     else
     {
-      park->layout[line][i++] = c;
+      carpark.layout[line][i++] = c;
     }
     printf("%c\n", c);
   }
   fclose(fp);
+  CarParkTree tree = make_car_park_tree();
+  tree.carparks[0] = carpark;
+  tree.total++;
+  return tree;
 }
-
-// Things to do:Change size to be height and width read from file, change file reading to be its own function,
-// and make a start on below
-
 // CarPark *park = carparktree.car_parks[0];
 //- Add parent to CarPark
 //- Create create_child_carparks function that takes a CarPark and CarList and creates a new CarPark for each possible move of each Car. These CarParks need to be added to CarParkTree with reference to their parent
@@ -153,6 +158,25 @@ CarParkTree make_car_park_tree(void)
   CarParkTree park_tree;
   park_tree.total = 0;
   return park_tree;
+}
+
+int solve_carpark(CarParkTree *tree)
+{
+  // int current_parent = tree->carparks[0]->parent;
+  for (int i = 0; i < tree->total; i++)
+  {
+    printf("total is %i\n", tree->total);
+    CarPark *park = &(tree->carparks[i]);
+    printpark(park);
+    if (!parkhascars(park))
+    {
+      return i;
+    }
+    CarList carlist = make_car_list();
+    findcars(&carlist, park);
+    create_car_park_children(tree, &carlist, i);
+  }
+  return -1;
 }
 
 bool create_car_park_children(CarParkTree *parktree, CarList *list, int position)
@@ -169,32 +193,81 @@ bool create_car_park_children(CarParkTree *parktree, CarList *list, int position
     bool canmovedown = verticalstatus & 2;
     if (canmoveleft)
     {
-      parktree->carparks[parktree->total] = generate_carpark(carpark, car, 0);
-      parktree->total++;
+      CarPark child_carpark = generate_carpark(carpark, car, 0, position);
+      if (isParkUnique(parktree, &child_carpark))
+      {
+        parktree->carparks[parktree->total] = child_carpark;
+        parktree->total++;
+      }
     }
     if (canmoveright)
     {
-      parktree->carparks[parktree->total] = generate_carpark(carpark, car, 1);
-      parktree->total++;
+      CarPark child_carpark = generate_carpark(carpark, car, 1, position);
+      if (isParkUnique(parktree, &child_carpark))
+      {
+        parktree->carparks[parktree->total] = child_carpark;
+        parktree->total++;
+      }
     }
     if (canmoveup)
     {
-      parktree->carparks[parktree->total] = generate_carpark(carpark, car, 2);
-      parktree->total++;
+      CarPark child_carpark = generate_carpark(carpark, car, 2, position);
+      if (isParkUnique(parktree, &child_carpark))
+      {
+        parktree->carparks[parktree->total] = child_carpark;
+        parktree->total++;
+      }
     }
     if (canmovedown)
     {
-      parktree->carparks[parktree->total] = generate_carpark(carpark, car, 3);
-      parktree->total++;
+      CarPark child_carpark = generate_carpark(carpark, car, 3, position);
+      if (isParkUnique(parktree, &child_carpark))
+      {
+        parktree->carparks[parktree->total] = child_carpark;
+        parktree->total++;
+      }
     }
   }
 }
 
-CarPark generate_carpark(CarPark *park, Car *car, int change) // make int change an enum
+bool isParkUnique(CarParkTree *tree, CarPark *park)
+{
+  for (int i = 0; i < tree->total; i++)
+  {
+    CarPark *currentpark = &(tree->carparks[i]);
+    if (arecarparks_equal(park, currentpark))
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool arecarparks_equal(CarPark *park, CarPark *other)
+{
+  if ((park->height != other->height) && (park->width != other->width))
+  {
+    return false;
+  }
+  for (int row = 0; row < park->height; row++)
+  {
+    for (int col = 0; col < park->width; col++)
+    {
+      if (park->layout[row][col] != other->layout[row][col])
+      {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+CarPark generate_carpark(CarPark *park, Car *car, int change, int parentid)
 {
   CarPark newcarpark;
   newcarpark.width = park->width;
   newcarpark.height = park->height;
+  newcarpark.parent = parentid;
   for (int row = 0; row < park->height; row++)
   {
     for (int col = 0; col < park->width; col++)
@@ -221,11 +294,11 @@ CarPark generate_carpark(CarPark *park, Car *car, int change) // make int change
         // move right
         if ((row == car->startrow) && (col == car->startcol + 1))
         {
-          newcarpark.layout[row][col] = car->label;
-        }
-        else if ((row == car->startrow) && (col == car->startcol - car->length))
-        {
           newcarpark.layout[row][col] = SPACE;
+        }
+        else if ((row == car->startrow) && (col == car->startcol + car->length + 1))
+        {
+          newcarpark.layout[row][col] = car->label;
         }
         else
         {
@@ -234,11 +307,11 @@ CarPark generate_carpark(CarPark *park, Car *car, int change) // make int change
         break;
       case 2:
         // move up
-        if ((row == car->startrow + 1) && (col == car->startcol))
+        if ((row == car->startrow - 1) && (col == car->startcol))
         {
           newcarpark.layout[row][col] = car->label;
         }
-        else if ((row == car->startrow - car->length) && (col == car->startcol))
+        else if ((row == car->startrow + car->length) && (col == car->startcol))
         {
           newcarpark.layout[row][col] = SPACE;
         }
@@ -248,13 +321,14 @@ CarPark generate_carpark(CarPark *park, Car *car, int change) // make int change
         }
         break;
       case 3:
-        if ((row == car->startrow - 1) && (col == car->startcol))
-        {
-          newcarpark.layout[row][col] = car->label;
-        }
-        else if ((row == car->startrow + car->length) && (col == car->startcol))
+        // move down
+        if ((row == car->startrow + 1) && (col == car->startcol))
         {
           newcarpark.layout[row][col] = SPACE;
+        }
+        else if ((row == car->startrow + car->length + 1) && (col == car->startcol))
+        {
+          newcarpark.layout[row][col] = car->label;
         }
         else
         {
@@ -378,25 +452,21 @@ void update_car(Car *car, CarPark *park, int row, int col)
 
 void printpark(CarPark *park)
 {
-  int width;
-  int height;
-  for (int row = 0; row < SIZE; row++)
+  for (int row = 0; row < park->height; row++)
   {
-    width++;
-    for (int col = 0; col < SIZE; col++)
+    for (int col = 0; col < park->width; col++)
     {
       printf("%c", park->layout[row][col]);
-      height++;
     }
     printf("\n");
   }
 }
 
-bool vehiclecheck(CarPark *park)
+bool parkhascars(CarPark *park)
 { // function that checks for vehicles and if none are found the car park is not added.
-  for (int row = 0; row < SIZE; row++)
+  for (int row = 0; row < park->width; row++)
   {
-    for (int col = 0; col < SIZE; col++)
+    for (int col = 0; col < park->height; col++)
     {
       if (park->layout[row][col] != BOLLARD && park->layout[row][col] != SPACE)
       {
@@ -422,7 +492,7 @@ bool iterate(CarPark *park, bool (*callback)(CarPark *park, int row, int col))
   return false;
 }
 
-/*bool strtopark(CarPark *park, char *str)
+bool strtopark(CarPark *park, char *str)
 {
   if (strlen(str) == 0)
   {
@@ -438,11 +508,11 @@ bool iterate(CarPark *park, bool (*callback)(CarPark *park, int row, int col))
   {
     for (col = 0; col < park->width; col++)
     {
-      park->layout[row][col] = str[col + (row * park->size)];
+      park->layout[row][col] = str[col + (row * 6)];
     }
   }
   return true;
-}*/
+}
 
 bool printcell(CarPark *park, int row, int col)
 { // todo: add a if statement that adds a \n after each row
@@ -455,13 +525,19 @@ void test(void)
   CarParkTree carparktree = make_car_park_tree();
   CarList car_list = make_car_list();
   CarPark park2;
-  // strtopark(&(carparktree.carparks[0]), "#.####.BBB.##A...##A...##A...#######");
-  // strtopark(&park2, "#.####.BBB.##A...##A...##A...#######");
   CarPark *park = &(carparktree.carparks[0]);
+  carparktree.carparks[0].width = 6;
+  carparktree.carparks[0].height = 6;
+  park->parent = -1;
+  carparktree.total++;
+  strtopark(park, "#.####.BBB.##A...##A...##A...#######");
+
+  // strtopark(&park2, "#.####.BBB.##A...##A...##A...#######");
   assert(printcell(park, 6, 6) == true);
-  assert(vehiclecheck(park) == true);
+  printpark(park);
+  assert(parkhascars(park) == true);
   assert(findcars(&car_list, park) == true);
-  assert(car_list.total == 2);
+  // assert(car_list.total == 2);
   assert(find_car_position(&car_list, 'B') == 0);
   assert(find_car_position(&car_list, 'A') == 1);
   assert(car_list.cars[0].orientation == Horizontal);
@@ -469,12 +545,10 @@ void test(void)
   assert(move_car_horizontally(&(car_list.cars[0]), park) == 3);
   assert(move_car_horizontally(&(car_list.cars[1]), park) == 0);
   assert(move_car_vertically(&(car_list.cars[1]), park) == 0);
-  // printpark(&park);
-  iterate(park, &printcell);
+  printf("number is %i\n", solve_carpark(&carparktree));
+  // iterate(park, &printcell);
   // strtopark(park, "#.####.....##....##....##....#######");
   //  assert(find_car_position(&cars, 'B') == -1);
-  assert(vehiclecheck(park) == false);
-  assert(vehiclecheck(&park2) == true);
 }
 
 // Use a while loop, compare the initial car park with the possible vehicle moves, and add any possible children to the end of the list.
