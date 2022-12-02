@@ -97,6 +97,7 @@ int main(int argc, char *argv[])
   //{
   // print just the steps taken to solve the park
   //}
+
   return 0;
 }
 
@@ -510,7 +511,7 @@ bool strtopark(CarPark *park, char *str)
 }
 
 bool printcell(CarPark *park, int row, int col)
-{ // todo: add a if statement that adds a \n after each row
+{
   printf("%c", park->layout[row][col]);
   return true;
 }
@@ -526,13 +527,10 @@ void test(void)
   park->parent = -1;
   carparktree.total++;
   strtopark(park, "#.####.BBB.##A...##A...##A...#######");
-
-  // strtopark(&park2, "#.####.BBB.##A...##A...##A...#######");
   assert(printcell(park, 6, 6) == true);
   printpark(park);
   assert(parkhascars(park) == true);
   assert(findcars(&car_list, park) == true);
-  // assert(car_list.total == 2);
   assert(find_car_position(&car_list, 'B') == 0);
   assert(find_car_position(&car_list, 'A') == 1);
   assert(car_list.cars[0].orientation == Horizontal);
@@ -541,7 +539,4 @@ void test(void)
   assert(move_car_horizontally(&(car_list.cars[1]), park) == 0);
   assert(move_car_vertically(&(car_list.cars[1]), park) == 0);
   printf("number is %i\n", solve_carpark(&carparktree));
-  // iterate(park, &printcell);
-  // strtopark(park, "#.####.....##....##....##....#######");
-  //  assert(find_car_position(&cars, 'B') == -1); 
 }
