@@ -16,7 +16,7 @@ lisp *lisp_atom(const atomtype a)
 // Returns a list containing the car as 'l1'
 // and the cdr as 'l2'- data in 'l1' and 'l2' are reused,
 // and not copied. Either 'l1' and/or 'l2' can be NULL
-lisp *lisp_cons(const lisp *l1, const lisp *l2);
+lisp *lisp_cons(const lisp *l1, const lisp *l2)
 {
     lisp *cons = malloc(sizeof(lisp));
     if (cons == NULL)
@@ -25,7 +25,7 @@ lisp *lisp_cons(const lisp *l1, const lisp *l2);
     }
     cons->car = l1;
     cons->cdr = l2; 
-    return cons; 
+    return cons;
 }
 
 // Returns number of components in the list.
