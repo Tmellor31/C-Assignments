@@ -9,10 +9,11 @@
 
 #include "../lisp.h" 
 #define LISPIMPL "Linked" 
+#define UNBOUND -1 
 
 struct lisp
 {
-  const struct lisp *car;
-  const struct lisp *cdr;
+  struct lisp *car;
+  struct lisp *cdr;
   atomtype atom;
 };
