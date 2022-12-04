@@ -1,5 +1,7 @@
 #include "specific.h"
 
+//things to think about - how to write lisptostr so it converts con1 (in the test) to (1 2). 
+
 // Returns element 'a' - this is not a list, and
 // by itelf would be printed as e.g. "3", and not "(3)"
 lisp *lisp_atom(const atomtype a)
@@ -51,6 +53,7 @@ atomtype lisp_getval(const lisp *l)
 }
 
 // Returns a deep copy of the list 'l'
+//How deep?
 lisp *lisp_copy(const lisp *l)
 {
     lisp *cons = (lisp *)malloc(sizeof(lisp));
@@ -91,7 +94,7 @@ void lisp_tostring(const lisp *l, char *str)
 }
 
 // Clears up all space used
-// Double pointer allows function to set 'l' to NULL on success
+// Double pointer allows function to set '*l' to NULL on success
 void lisp_free(lisp **l)
 {
     (void)l;
