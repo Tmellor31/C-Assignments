@@ -58,29 +58,30 @@ atomtype lisp_getval(const lisp *l)
 // How deep?
 lisp *lisp_copy(const lisp *l)
 {
-    lisp *cons = (lisp *)malloc(sizeof(lisp));
-    if (cons == NULL)
+    if (l == NULL)
     {
-        exit(EXIT_FAILURE);
+        return NULL;
     }
-    cons->atom = l->atom;
-    cons->car = l->car;
-    if (l->cdr != NULL)
-    {
-        cons->cdr = lisp_copy(l->cdr);
-    }
+
+    lisp *cons = lisp_atom(l->atom);
+    cons->car = lisp_copy(l->car);
+    cons->cdr = lisp_copy(l->cdr);
     return cons;
 }
+
 // Returns number of components in the list.
 int lisp_length(const lisp *l)
 {
+    if (l == NULL)
+    {
+        return 0;
+    }
     int length = 0;
-    while (l != NULL)
+    while (l->cdr != NULL)
     {
         length++;
         l = l->cdr;
     }
-
     return length;
 }
 
@@ -132,6 +133,14 @@ void test(void)
 
     assert(lisp_isatomic(atom1) == true);
     assert(lisp_isatomic(con1) == false);
+
+    lisp *con1copy = lisp_copy(con1);
+    assert(lisp_isatomic(con1copy) == false);
+    assert(lisp_getval(con1copy) == UNBOUND);
+    assert(lisp_car(con1copy) != atom1);
+    assert(lisp_car(con1copy) != NULL);
+    assert(lisp_isatomic(lisp_car(con1copy)) == true);
+    assert(lisp_getval(lisp_car(con1copy)) == 1); // Is this a magic number?
 }
 
 /* ------------- Tougher Ones : Extensions ---------------*/
