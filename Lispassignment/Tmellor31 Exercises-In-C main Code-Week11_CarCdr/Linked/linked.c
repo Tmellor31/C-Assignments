@@ -1,6 +1,6 @@
 #include "specific.h"
 
-//things to think about - how to write lisptostr so it converts con1 (in the test) to (1 2). 
+// things to think about - how to write lisptostr so it converts con1 (in the test) to (1 2).
 
 // Returns element 'a' - this is not a list, and
 // by itelf would be printed as e.g. "3", and not "(3)"
@@ -12,6 +12,8 @@ lisp *lisp_atom(const atomtype a)
         exit(EXIT_FAILURE);
     }
     cons->atom = a;
+    cons->car = NULL;
+    cons->cdr = NULL;
     return cons;
 }
 
@@ -53,7 +55,7 @@ atomtype lisp_getval(const lisp *l)
 }
 
 // Returns a deep copy of the list 'l'
-//How deep?
+// How deep?
 lisp *lisp_copy(const lisp *l)
 {
     lisp *cons = (lisp *)malloc(sizeof(lisp));
@@ -80,6 +82,20 @@ int lisp_length(const lisp *l)
     }
 
     return length;
+}
+
+// Returns a boolean depending up whether l points to an atom (not a list)
+bool lisp_isatomic(const lisp *l)
+{
+    if (l == NULL)
+    {
+        return false;
+    }
+    if (l->car == NULL && l->cdr == NULL)
+    {
+        return true;
+    }
+    return false;
 }
 
 // Returns stringified version of list
@@ -113,6 +129,9 @@ void test(void)
     assert(lisp_getval(con2) == UNBOUND);
     assert(lisp_getval(atom1) == 1);
     assert(lisp_getval(atom2) == 2);
+
+    assert(lisp_isatomic(atom1) == true);
+    assert(lisp_isatomic(con1) == false);
 }
 
 /* ------------- Tougher Ones : Extensions ---------------*/
@@ -138,8 +157,9 @@ lisp *lisp_list(const int n, ...)
 // each component of the list 'l'.
 // The user-defined 'func' is passed a pointer to a cons,
 // and will maintain an accumulator of the result.
-atomtype lisp_reduce(atomtype (*func)(lisp *l), lisp *l)
+void lisp_reduce(void (*func)(lisp *l, atomtype *n), lisp *l, atomtype *acc)
 {
-    func(l);
-    return l->atom;
+    func(NULL, NULL);
+    (void)l;
+    (void)acc;
 }
