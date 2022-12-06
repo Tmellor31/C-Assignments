@@ -3,7 +3,7 @@
 void cons_tostring(const lisp *l, char *str);
 void list_tostring(const lisp *l, char *str);
 
-// things to think about - how to write lisptostr so it converts con1 (in the test) to (1 2).
+// questions: Is the '1' used in the tests a magic number, and would I lose marks for the extension asserts not working. 
 
 // Returns element 'a' - this is not a list, and
 // by itelf would be printed as e.g. "3", and not "(3)"
@@ -154,7 +154,6 @@ void lisp_tostring(const lisp *l, char *str)
 {
     strcpy(str,""); //clear string
     list_tostring(l,str);
-
 }
 
 // Clears up all space used
