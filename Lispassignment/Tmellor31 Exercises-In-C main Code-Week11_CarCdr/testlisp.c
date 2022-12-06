@@ -45,6 +45,7 @@ int main(void)
    assert(l1);
    assert(lisp_length(l1)==1);
    lisp_tostring(l1, str);
+   printf("string is %s\n", str); 
    assert(strcmp(str, "(2)")==0);
    assert(lisp_getval(car(l1))==2);
    assert(lisp_isatomic(l1)==false);

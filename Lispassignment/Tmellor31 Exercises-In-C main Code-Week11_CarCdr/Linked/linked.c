@@ -1,5 +1,8 @@
 #include "specific.h"
 
+void cons_tostring(const lisp *l, char *str);
+void list_tostring(const lisp *l, char *str);
+
 // things to think about - how to write lisptostr so it converts con1 (in the test) to (1 2).
 
 // Returns element 'a' - this is not a list, and
@@ -117,13 +120,17 @@ void cons_tostring(const lisp *l, char *str)
     }
     else
     {
-        lisp_tostring(l->car, str);
+        list_tostring(l->car, str);
+        char space[] = " ";
+        if (l->cdr != NULL)
+        {
+            strcat(str, space);
+        }
         cons_tostring(l->cdr, str);
     }
 }
 
-// Returns stringified version of list
-void lisp_tostring(const lisp *l, char *str)
+void list_tostring(const lisp *l, char *str)
 {
     if (l == NULL)
     {
@@ -140,11 +147,14 @@ void lisp_tostring(const lisp *l, char *str)
         cons_tostring(l, str);
         strcat(str, ")");
     }
+}
 
-    /*if (l->car != NULL && l->cdr == NULL)
-    {
-        strcat(str, ")");
-    }*/
+// Returns stringified version of list
+void lisp_tostring(const lisp *l, char *str)
+{
+    strcpy(str,""); //clear string
+    list_tostring(l,str);
+
 }
 
 // Clears up all space used
@@ -200,11 +210,17 @@ void test(void)
     lisp_tostring(con1copy, str);
     printf("%s\n", str);
 
-    lisp *longlist = lisp_cons(lisp_atom(1), lisp_cons(lisp_cons(lisp_atom(2), lisp_cons(lisp_atom(7), NULL)), NULL));
+    lisp *longlist = lisp_cons(lisp_atom(1), lisp_cons(lisp_cons(lisp_atom(2), lisp_cons(lisp_atom(7), NULL)), lisp_cons(lisp_atom(6), NULL)));
+    char newstring[MAXLISTLENGTH];
+    lisp_tostring(longlist, newstring);
+    printf("%s\n", newstring);
 
-    char string1[100] = "Fred likes to eat pineapple quite regularly actually";
-    sprintf(string1, "%i", 50);
-    printf("%s\n", string1);
+    lisp *l1 = lisp_cons(lisp_atom(2), NULL);
+    char teststring[MAXLISTLENGTH];
+    assert(lisp_length(l1) == 1);
+    lisp_tostring(l1, teststring);
+    printf("%s\n", teststring);
+    assert(strcmp(teststring, "(2)") == 0);
 
     lisp_free(&con1);
     lisp_free(&con1copy);
