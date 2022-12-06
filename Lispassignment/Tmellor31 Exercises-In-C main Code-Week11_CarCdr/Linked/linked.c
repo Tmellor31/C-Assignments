@@ -209,11 +209,6 @@ void test(void)
     lisp_tostring(con1copy, str);
     printf("%s\n", str);
 
-    lisp *longlist = lisp_cons(lisp_atom(1), lisp_cons(lisp_cons(lisp_atom(2), lisp_cons(lisp_atom(7), NULL)), lisp_cons(lisp_atom(6), NULL)));
-    char newstring[MAXLISTLENGTH];
-    lisp_tostring(longlist, newstring);
-    printf("%s\n", newstring);
-
     lisp *l1 = lisp_cons(lisp_atom(2), NULL);
     char teststring[MAXLISTLENGTH];
     assert(lisp_length(l1) == 1);
