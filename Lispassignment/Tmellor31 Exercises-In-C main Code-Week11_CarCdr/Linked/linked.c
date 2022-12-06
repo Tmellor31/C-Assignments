@@ -77,11 +77,15 @@ int lisp_length(const lisp *l)
         return 0;
     }
     int length = 0;
-    while (l->cdr != NULL)
+    while (l != NULL)
     {
-        length++;
+        if (!lisp_isatomic(l))
+        {
+            length++;
+        }
         l = l->cdr;
     }
+
     return length;
 }
 
@@ -114,7 +118,24 @@ void lisp_tostring(const lisp *l, char *str)
 // Double pointer allows function to set '*l' to NULL on success
 void lisp_free(lisp **l)
 {
-    (void)l;
+    if (l == NULL)
+    {
+        return;
+    }
+    if (*l == NULL)
+    {
+        return;
+    }
+    if ((*l)->car != NULL)
+    {
+        lisp_free(&(*l)->car);
+    }
+    if ((*l)->cdr != NULL)
+    {
+        lisp_free(&(*l)->cdr);
+    }
+    free(*l);
+    *l = NULL;
 }
 
 void test(void)
@@ -141,6 +162,11 @@ void test(void)
     assert(lisp_car(con1copy) != NULL);
     assert(lisp_isatomic(lisp_car(con1copy)) == true);
     assert(lisp_getval(lisp_car(con1copy)) == 1); // Is this a magic number?
+
+    lisp_free(&con1);
+    lisp_free(&con1copy);
+    assert(con1 == NULL);
+    assert(con1copy == NULL);
 }
 
 /* ------------- Tougher Ones : Extensions ---------------*/
