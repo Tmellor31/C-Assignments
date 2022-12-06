@@ -10,6 +10,8 @@
 #include "../lisp.h" 
 #define LISPIMPL "Linked" 
 #define UNBOUND -1 
+#define ATOMSTRSIZE 10
+#define MAXLISTLENGTH 100
 
 struct lisp
 {

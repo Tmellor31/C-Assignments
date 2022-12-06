@@ -103,6 +103,25 @@ bool lisp_isatomic(const lisp *l)
     return false;
 }
 
+void cons_tostring(const lisp *l, char *str)
+{
+    if (l == NULL)
+    {
+        return;
+    }
+    if (lisp_isatomic(l))
+    {
+        char atomstr[ATOMSTRSIZE] = "";
+        sprintf(atomstr, "%i", lisp_getval(l));
+        strcat(str, atomstr);
+    }
+    else
+    {
+        lisp_tostring(l->car, str);
+        cons_tostring(l->cdr, str);
+    }
+}
+
 // Returns stringified version of list
 void lisp_tostring(const lisp *l, char *str)
 {
@@ -111,7 +130,21 @@ void lisp_tostring(const lisp *l, char *str)
         strcpy(str, "()");
         return;
     }
-    (void)str;
+    else if (lisp_isatomic(l))
+    {
+        cons_tostring(l, str);
+    }
+    else
+    {
+        strcat(str, "(");
+        cons_tostring(l, str);
+        strcat(str, ")");
+    }
+
+    /*if (l->car != NULL && l->cdr == NULL)
+    {
+        strcat(str, ")");
+    }*/
 }
 
 // Clears up all space used
@@ -162,6 +195,16 @@ void test(void)
     assert(lisp_car(con1copy) != NULL);
     assert(lisp_isatomic(lisp_car(con1copy)) == true);
     assert(lisp_getval(lisp_car(con1copy)) == 1); // Is this a magic number?
+
+    char str[MAXLISTLENGTH] = "";
+    lisp_tostring(con1copy, str);
+    printf("%s\n", str);
+
+    lisp *longlist = lisp_cons(lisp_atom(1), lisp_cons(lisp_cons(lisp_atom(2), lisp_cons(lisp_atom(7), NULL)), NULL));
+
+    char string1[100] = "Fred likes to eat pineapple quite regularly actually";
+    sprintf(string1, "%i", 50);
+    printf("%s\n", string1);
 
     lisp_free(&con1);
     lisp_free(&con1copy);
