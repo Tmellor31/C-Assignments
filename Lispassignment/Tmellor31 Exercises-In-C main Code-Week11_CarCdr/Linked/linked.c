@@ -2,7 +2,7 @@
 
 void cons_tostring(const lisp *l, char *str);
 void list_tostring(const lisp *l, char *str);
- 
+
 // Returns element 'a' - this is not a list, and
 // by itelf would be printed as e.g. "3", and not "(3)"
 lisp *lisp_atom(const atomtype a)
@@ -122,13 +122,13 @@ void cons_tostring(const lisp *l, char *str)
         char space[] = " ";
         if (l->cdr != NULL)
         {
-            strcat(str, space); //adds a space between numbers
+            strcat(str, space); // adds a space between numbers
         }
         cons_tostring(l->cdr, str);
     }
 }
 
-void list_tostring(const lisp *l, char *str) //returns stringified version of list
+void list_tostring(const lisp *l, char *str) // returns stringified version of list
 {
     if (l == NULL)
     {
@@ -150,8 +150,8 @@ void list_tostring(const lisp *l, char *str) //returns stringified version of li
 // Clears the current string before the new list is then stringified
 void lisp_tostring(const lisp *l, char *str)
 {
-    strcpy(str,""); //clear string
-    list_tostring(l,str);
+    strcpy(str, ""); // clear string
+    list_tostring(l, str);
 }
 
 // Clears up all space used
