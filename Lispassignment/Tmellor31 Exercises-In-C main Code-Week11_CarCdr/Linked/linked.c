@@ -2,9 +2,7 @@
 
 void cons_tostring(const lisp *l, char *str);
 void list_tostring(const lisp *l, char *str);
-
-// questions: Is the '1' used in the tests a magic number, and would I lose marks for the extension asserts not working. 
-
+ 
 // Returns element 'a' - this is not a list, and
 // by itelf would be printed as e.g. "3", and not "(3)"
 lisp *lisp_atom(const atomtype a)
@@ -124,13 +122,13 @@ void cons_tostring(const lisp *l, char *str)
         char space[] = " ";
         if (l->cdr != NULL)
         {
-            strcat(str, space);
+            strcat(str, space); //adds a space between numbers
         }
         cons_tostring(l->cdr, str);
     }
 }
 
-void list_tostring(const lisp *l, char *str)
+void list_tostring(const lisp *l, char *str) //returns stringified version of list
 {
     if (l == NULL)
     {
@@ -149,7 +147,7 @@ void list_tostring(const lisp *l, char *str)
     }
 }
 
-// Returns stringified version of list
+// Clears the current string before the new list is then stringified
 void lisp_tostring(const lisp *l, char *str)
 {
     strcpy(str,""); //clear string
@@ -203,7 +201,7 @@ void test(void)
     assert(lisp_car(con1copy) != atom1);
     assert(lisp_car(con1copy) != NULL);
     assert(lisp_isatomic(lisp_car(con1copy)) == true);
-    assert(lisp_getval(lisp_car(con1copy)) == 1); // Is this a magic number?
+    assert(lisp_getval(lisp_car(con1copy)) == 1);
 
     char str[MAXLISTLENGTH] = "";
     lisp_tostring(con1copy, str);
