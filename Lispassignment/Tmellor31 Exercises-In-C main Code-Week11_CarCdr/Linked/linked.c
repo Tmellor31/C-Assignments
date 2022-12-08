@@ -205,17 +205,16 @@ void test(void)
 
     char str[MAXLISTLENGTH] = "";
     lisp_tostring(con1copy, str);
-    printf("%s\n", str);
 
     lisp *l1 = lisp_cons(lisp_atom(2), NULL);
     char teststring[MAXLISTLENGTH];
     assert(lisp_length(l1) == 1);
     lisp_tostring(l1, teststring);
-    printf("%s\n", teststring);
     assert(strcmp(teststring, "(2)") == 0);
 
     lisp_free(&con1);
     lisp_free(&con1copy);
+    lisp_free(&l1); 
     assert(con1 == NULL);
     assert(con1copy == NULL);
 }

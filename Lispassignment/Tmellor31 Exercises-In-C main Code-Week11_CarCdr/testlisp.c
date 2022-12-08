@@ -126,19 +126,19 @@ int main(void)
    /*-------------------------*/
    /* lisp_fromstring() tests */ 
    /*-------------------------*/
-   char inp[4][LISTSTRLEN] = {"()", "(1)", "(0 (1 -2) 3 4 50)", "((-1 2) (3 4) (5 (6 7)))"};
+   /*char inp[4][LISTSTRLEN] = {"()", "(1)", "(0 (1 -2) 3 4 50)", "((-1 2) (3 4) (5 (6 7)))"};
    for(int i=0; i<4; i++){
       lisp* f1 = fromstring(inp[i]);
       lisp_tostring(f1, str);
       assert(strcmp(str, inp[i])==0);
       lisp_free(&f1);
       assert(!f1);
-   }
+   }*/
 
    /*--------------------*/
    /* lisp_list() tests  */
    /*--------------------*/
-   lisp* g1 = lisp_list(3, atom(6), atom(7), atom(8));
+   /*lisp* g1 = lisp_list(3, atom(6), atom(7), atom(8));
    lisp_tostring(g1, str);
    assert(strcmp(str, "(6 7 8)")==0);
    lisp* g2 = lisp_list(5, g1, atom(-123456), copy(g1), atom(25),
@@ -147,12 +147,12 @@ int main(void)
    assert(strcmp(str, "((6 7 8) -123456 (6 7 8) 25 (1 (2 (3 (4 5)))))")==0);
    // g2 reuses g1, so no need to lisp_free(g1)
    lisp_free(&g2);
-   assert(!g2);
+   assert(!g2);*/
 
    /*--------------------------------------------------*/
    /* lisp_reduce() tests - calls func for every atom  */
    /*--------------------------------------------------*/
-   lisp* h1 = lisp_fromstring("(1 2 3 4)");
+   /*lisp* h1 = lisp_fromstring("(1 2 3 4)");
    lisp* h2 = lisp_fromstring("(1 2 (7) 3)");
    atomtype acc = 1;
    lisp_reduce(times, h1, &acc);
@@ -172,10 +172,10 @@ int main(void)
    assert(!h2);
    printf("End\n");
    return 0;
-}
+}*/
 
 // Multiplies getval() of all atoms
-void times(lisp* l, atomtype* accum)
+/*void times(lisp* l, atomtype* accum)
 {
    *accum = *accum * lisp_getval(l);
 }
@@ -186,4 +186,5 @@ void atms(lisp* l, atomtype* accum)
    // Could just add one (since each node must be atomic),
    // but prevents unused warning for variable 'l'...
    *accum = *accum + lisp_isatomic(l);
+}*/
 }
