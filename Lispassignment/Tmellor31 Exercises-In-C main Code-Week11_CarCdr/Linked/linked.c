@@ -1,10 +1,14 @@
 #include "specific.h"
 
+// Non-extension code works and has no mem leaks when I run it. I've attempted to write lisp_reduce, but can't test it aganist testlisp.c -
+// - as that requires the from string function which I haven't done.
+
 void cons_tostring(const lisp *l, char *str);
 void list_tostring(const lisp *l, char *str);
+void new_times(lisp* l, atomtype* n);
+void new_atoms(lisp* l, atomtype* n);
 
-// Returns element 'a' - this is not a list, and
-// by itelf would be printed as e.g. "3", and not "(3)"
+
 lisp *lisp_atom(const atomtype a)
 {
     lisp *cons = malloc(sizeof(lisp));
@@ -18,9 +22,6 @@ lisp *lisp_atom(const atomtype a)
     return cons;
 }
 
-// Returns a list containing the car as 'l1'
-// and the cdr as 'l2'- data in 'l1' and 'l2' are reused,
-// and not copied. Either 'l1' and/or 'l2' can be NULL
 lisp *lisp_cons(const lisp *l1, const lisp *l2)
 {
     lisp *cons = (lisp *)malloc(sizeof(lisp));
@@ -34,29 +35,22 @@ lisp *lisp_cons(const lisp *l1, const lisp *l2)
     return cons;
 }
 
-// Returns the car (1st) component of the list 'l'.
-// Does not copy any data.
 lisp *lisp_car(const lisp *l)
 {
     return l->car;
 }
 
-// Returns the cdr (all but the 1st) component of the list 'l'.
-// Does not copy any data.
 lisp *lisp_cdr(const lisp *l)
 {
     return l->cdr;
 }
 
-// Returns the data/value stored in the cons 'l'
 atomtype lisp_getval(const lisp *l)
 {
 
     return l->atom;
 }
 
-// Returns a deep copy of the list 'l'
-// How deep?
 lisp *lisp_copy(const lisp *l)
 {
     if (l == NULL)
@@ -70,7 +64,6 @@ lisp *lisp_copy(const lisp *l)
     return cons;
 }
 
-// Returns number of components in the list.
 int lisp_length(const lisp *l)
 {
     if (l == NULL)
@@ -90,7 +83,6 @@ int lisp_length(const lisp *l)
     return length;
 }
 
-// Returns a boolean depending up whether l points to an atom (not a list)
 bool lisp_isatomic(const lisp *l)
 {
     if (l == NULL)
@@ -154,8 +146,6 @@ void lisp_tostring(const lisp *l, char *str)
     list_tostring(l, str);
 }
 
-// Clears up all space used
-// Double pointer allows function to set '*l' to NULL on success
 void lisp_free(lisp **l)
 {
     if (l == NULL)
@@ -177,6 +167,16 @@ void lisp_free(lisp **l)
     free(*l);
     *l = NULL;
 }
+
+void new_times(lisp* l, atomtype* accum)
+{
+   *accum = *accum * lisp_getval(l);
+}
+
+void new_atoms(lisp* l, atomtype* accum)
+{
+   *accum = *accum + lisp_isatomic(l);
+   }
 
 void test(void)
 {
@@ -212,11 +212,21 @@ void test(void)
     lisp_tostring(l1, teststring);
     assert(strcmp(teststring, "(2)") == 0);
 
+    atomtype accum = 1;
+    (lisp_reduce(new_times,l1,&accum)); 
+    assert(accum == 4); 
+    accum = 0; 
+    (lisp_reduce(new_atoms,l1,&accum)); 
+    assert(accum == 2); 
+
+
+
     lisp_free(&con1);
     lisp_free(&con1copy);
     lisp_free(&l1); 
     assert(con1 == NULL);
     assert(con1copy == NULL);
+    assert(l1 == NULL); 
 }
 
 /* ------------- Tougher Ones : Extensions ---------------*/
@@ -242,9 +252,17 @@ lisp *lisp_list(const int n, ...)
 // each component of the list 'l'.
 // The user-defined 'func' is passed a pointer to a cons,
 // and will maintain an accumulator of the result.
-void lisp_reduce(void (*func)(lisp *l, atomtype *n), lisp *l, atomtype *acc)
+void lisp_reduce(void (*func)(lisp *l, atomtype *n), lisp *l, atomtype *accum)
 {
-    func(NULL, NULL);
-    (void)l;
-    (void)acc;
+    if(lisp_isatomic(l)){
+        func(l, accum); 
+        return;
+    }
+    if(l == NULL){
+        return;
+    }
+    lisp_reduce(func, l->car, accum);
+    lisp_reduce(func,l->car, accum); 
+    return; 
 }
+
