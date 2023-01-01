@@ -57,13 +57,26 @@ void INSTRCT(InputString *input_string)
 
 void LISTFUNC(InputString *input_string)
 {
-    if (!is_at_start(input_string->array2d[input_string->y_position], "CAR", input_string->x_position))
+    if (is_at_start(input_string->array2d[input_string->y_position], "CAR", input_string->x_position))
     {
-        printf("Expected keyword at row %i col %i \n", input_string->y_position, input_string->x_position);
-        exit(EXIT_FAILURE);
+        LIST(input_string); 
+    }
+    else if (is_at_start(input_string->array2d[input_string->y_position], "CDR", input_string->x_position))
+    {
+        LIST(input_string);
+    }
+    else if (is_at_start(input_string->array2d[input_string->y_position], "CONS", input_string->x_position))
+    {
+        LIST(input_string);
+        LIST(input_string); 
+    }
+    else
+    {
+      printf("Expected a CAR,CDR or CONS?");
+      exit(EXIT_FAILURE); 
     }
 }
-
+    
 bool is_at_start(char *inputstring, char *keyword, int inputposition)
 {
     for (int i = 0; i < strlen(keyword); i++)
