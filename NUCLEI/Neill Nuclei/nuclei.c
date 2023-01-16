@@ -5,11 +5,15 @@ which will eliminate spaces and new lines - \n and \r
 #defines
 then maybe another look at is at start.*/
 
+//Need to check functions to see if I want to fail if the file ends during the function
+//If reach endfile at any point apart from via Prog close bracket, exit the program
+//For each line in the file going to read it into a string 
+
 void Prog(InputString *input_string);
 void INSTRCTS(InputString *input_string);
 void INSTRCT(InputString *input_string);
-void LISTFUNC(InputString *input_string);
-void IOFUNC(InputString *input_string);
+bool LISTFUNC(InputString *input_string);
+bool IOFUNC(InputString *input_string);
 void LIST(InputString *input_string);
 void VAR(InputString *input_string);
 void LITERAL(InputString *input_string);
@@ -53,16 +57,22 @@ void INSTRCTS(InputString *input_string)
 
 void INSTRCT(InputString *input_string)
 {
-    if (input_string->array2d[input_string->y_position][input_string->x_position] == '(')
+    if (input_string->array2d[input_string->y_position][input_string->x_position] != '(')
     {
-        LISTFUNC(input_string);
+        printf("Expected an '(' at row %i col %i \n", input_string->y_position, input_string->x_position);
+        exit(EXIT_FAILURE);
     }
-    /*Here I want - if there isnt a car cdr or cons it tries IOfunc, and if there isnt one
-    of those it exits*/
-    else if (input_string->array2d[input_string->y_position][input_string->x_position] == '(')
+
+    bool haspassed = LISTFUNC(input_string) || IOFUNC(input_string);
+
+    if (!haspassed)
+    {
+        printf("Expected CAR,CDR,CONS,PRINT, or SET?\n");
+        exit(EXIT_FAILURE);
+    }
 }
 
-void LISTFUNC(InputString *input_string)
+bool LISTFUNC(InputString *input_string)
 {
     if (is_at_start(input_string->array2d[input_string->y_position], "CAR", input_string->x_position))
     {
@@ -79,8 +89,8 @@ void LISTFUNC(InputString *input_string)
     }
     else
     {
-        printf("Expected a CAR,CDR or CONS?");
-        exit(EXIT_FAILURE);
+        // No CAR,CDR or CONS found
+        return false;
     }
 }
 
@@ -104,8 +114,8 @@ bool get_next_char(InputString *input_string)
         if (input_string->y_position == input_string->row_count &&
             y_length == input_string->x_position)
         {
-            //End of file reached 
-            return false; 
+            // End of file reached
+            return false;
         }
         else if (input_string->array2d[input_string->y_position][input_string->x_position] == '\n')
         {
@@ -115,15 +125,15 @@ bool get_next_char(InputString *input_string)
         {
             input_string->x_position++;
         }
-        else 
+        else
         {
-           //Successfully moved to next char
-           return true; 
+            // Successfully moved to next char
+            return true;
         }
     }
 }
 
-void IOFUNC(InputString *input_string)
+bool IOFUNC(InputString *input_string)
 {
     if (is_at_start(input_string->array2d[input_string->y_position], "SET", input_string->x_position))
     {
@@ -138,8 +148,8 @@ void IOFUNC(InputString *input_string)
 
     else
     {
-        printf("Expected a SET or PRINT?");
-        exit(EXIT_FAILURE);
+        // NO PRINT OR SET found
+        return false;
     }
 }
 
