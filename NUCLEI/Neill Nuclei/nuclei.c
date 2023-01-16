@@ -1,4 +1,9 @@
 #include "nuclei.h"
+/*Finish main parsing functions
+Add asserts for correct results - including where get position ++ change for get next char
+which will eliminate spaces and new lines - \n and \r
+#defines
+then maybe another look at is at start.*/
 
 void Prog(InputString *input_string);
 void INSTRCTS(InputString *input_string);
@@ -48,11 +53,13 @@ void INSTRCTS(InputString *input_string)
 
 void INSTRCT(InputString *input_string)
 {
-    if (input_string->array2d[input_string->y_position][input_string->x_position] != '(')
+    if (input_string->array2d[input_string->y_position][input_string->x_position] == '(')
     {
-        printf("Expected '(' at row %i col %i \n", input_string->y_position, input_string->x_position);
-        exit(EXIT_FAILURE);
+        LISTFUNC(input_string);
     }
+    /*Here I want - if there isnt a car cdr or cons it tries IOfunc, and if there isnt one
+    of those it exits*/
+    else if (input_string->array2d[input_string->y_position][input_string->x_position] == '(')
 }
 
 void LISTFUNC(InputString *input_string)
@@ -87,6 +94,33 @@ bool is_at_start(char *inputstring, char *keyword, int inputposition)
         }
     }
     return true;
+}
+
+bool get_next_char(InputString *input_string)
+{
+    int y_length = strlen(input_string->array2d[input_string->y_position]);
+    while (true)
+    {
+        if (input_string->y_position == input_string->row_count &&
+            y_length == input_string->x_position)
+        {
+            //End of file reached 
+            return false; 
+        }
+        else if (input_string->array2d[input_string->y_position][input_string->x_position] == '\n')
+        {
+            input_string->y_position++;
+        }
+        else if (isspace(input_string->array2d[input_string->y_position][input_string->x_position]))
+        {
+            input_string->x_position++;
+        }
+        else 
+        {
+           //Successfully moved to next char
+           return true; 
+        }
+    }
 }
 
 void IOFUNC(InputString *input_string)
