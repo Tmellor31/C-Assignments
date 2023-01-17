@@ -20,6 +20,8 @@ void LITERAL(InputString *input_string);
 int currentx_position(InputString *input_string);
 bool is_at_start(char *inputstring, char *keyword, int inputposition);
 bool end_of_file_reached(InputString *input_string);
+bool get_next_char(InputString *input_string);
+
 void test(void);
 
 int main(void)
@@ -47,7 +49,7 @@ void INSTRCTS(InputString *input_string)
 {
     if (input_string->array2d[input_string->y_position][input_string->x_position] == ')')
     {
-        input_string->x_position++;
+        get_next_char(input_string);
     }
     else
     {
@@ -79,15 +81,18 @@ bool LISTFUNC(InputString *input_string)
     if (is_at_start(input_string->array2d[input_string->y_position], "CAR", input_string->x_position))
     {
         LIST(input_string);
+        return true; 
     }
     else if (is_at_start(input_string->array2d[input_string->y_position], "CDR", input_string->x_position))
     {
         LIST(input_string);
+        return true; 
     }
     else if (is_at_start(input_string->array2d[input_string->y_position], "CONS", input_string->x_position))
     {
         LIST(input_string);
         LIST(input_string);
+        return true;
     }
     else
     {
@@ -98,7 +103,7 @@ bool LISTFUNC(InputString *input_string)
 
 bool is_at_start(char *inputstring, char *keyword, int inputposition)
 {
-    for (int i = 0; i < strlen(keyword); i++)
+    for (unsigned int i = 0; i < strlen(keyword); i++)
     {
         if (inputstring[inputposition + i] != keyword[i])
         {
@@ -110,23 +115,27 @@ bool is_at_start(char *inputstring, char *keyword, int inputposition)
 
 bool end_of_file_reached(InputString *input_string)
 {
-    int y_length = strlen(input_string->array2d[input_string->y_position]);
+    int row_length = strlen(input_string->array2d[input_string->y_position]);
 
-    if (input_string->y_position == input_string->row_count-1 &&
-        input_string->x_position == y_length-1)
+    if (input_string->y_position == input_string->row_count - 1 &&
+        input_string->x_position == row_length - 1)
     {
         // End of file reached
         return true;
     }
 
+    else
+    {
+        return false;
+    }
 }
 
 bool get_next_char(InputString *input_string)
 {
-    int y_length = strlen(input_string->array2d[input_string->y_position]);
+    //int y_length = strlen(input_string->array2d[input_string->y_position]);
     while (true)
     {
-        if (!end_of_file_reached(input_string))
+        if (end_of_file_reached(input_string))
         {
             return false;
         }
@@ -152,11 +161,13 @@ bool IOFUNC(InputString *input_string)
     {
         VAR(input_string);
         LIST(input_string);
+        return true;
     }
 
     else if (is_at_start(input_string->array2d[input_string->y_position], "PRINT", input_string->x_position))
     {
         VAR(input_string);
+        return true; 
     }
 
     else
@@ -168,7 +179,6 @@ bool IOFUNC(InputString *input_string)
 
 void LIST(InputString *input_string)
 {
-    bool functionchecker = false;
     if (is_at_start(input_string->array2d[input_string->y_position], "'", input_string->x_position))
     {
         LITERAL(input_string);
@@ -218,15 +228,16 @@ void VAR(InputString *input_string)
 
 void LITERAL(InputString *input_string)
 {
-    input_string->x_position++;
+    (void)input_string;
+    /*input_string->x_position++;
     if (input_string->array2d[input_string->y_position][input_string->x_position] == '\'' ||
-        input_string->array2d[input_string->y_position][input_string->x_position] >= '0' &&
-            input_string->array2d[input_string->y_position][input_string->x_position] <= '9')
+        (input_string->array2d[input_string->y_position][input_string->x_position] >= '0' &&
+            input_string->array2d[input_string->y_position][input_string->x_position] <= '9'))
     {
         input_string->x_position++;
     }
 
-    else if (strlen(input_string->array2d[input_string->y_position][input_string->x_position]) == 0)
+    else if ((input_string->array2d[input_string->y_position][input_string->x_position]) == '')
     {
         printf("Given string is empty?\n");
     }
@@ -235,31 +246,34 @@ void LITERAL(InputString *input_string)
     {
         printf("Expected a number from 1-9 or a list of numbers :) \n");
         exit(EXIT_FAILURE);
-    }
+    }*/
 }
 
 void test(void)
 {
-    char test_input_string[] = "Fred likes samsung tvs";
+    char test_input_str[] = "Fred likes samsung tvs";
     char test_keyword[] = "Fred";
     char test_wrong_keyword[] = "John";
     char test_fail[] = "likes";
     int test_input_position = 0;
 
-    assert(is_at_start(test_input_string, test_keyword, test_input_position) == true);
-    assert(is_at_start(test_input_string, test_wrong_keyword, test_input_position) == false);
-    assert(is_at_start(test_input_string, test_fail, test_input_position) == false);
-    assert(is_at_start(test_input_string, test_fail, 5) == true);
-    assert(is_at_start(test_input_string, "likes", 5) == true);
+    assert(is_at_start(test_input_str, test_keyword, test_input_position) == true);
+    assert(is_at_start(test_input_str, test_wrong_keyword, test_input_position) == false);
+    assert(is_at_start(test_input_str, test_fail, test_input_position) == false);
+    assert(is_at_start(test_input_str, test_fail, 5) == true);
+    assert(is_at_start(test_input_str, "likes", 5) == true);
 
-    /*TestInputString *test_input_struct; 
-    test_input_struct->test_array2d= 
-        {
-            {'J', 'a', 'v', 'a', '\0'},
-            {'P', 'y', 't', 'h', 'o', 'n', '\0'},
-            {'C', '+', '+', '\0'},
-            {'H', 'T', 'M', 'L', '\0'},
-            {'S', 'Q', 'L', '\0'}};
+    InputString *test_input_string = ncalloc(1, sizeof(InputString));
 
-    assert(end_of_file_reached(test_array2d) == false);*/
+    strcpy(test_input_string->array2d[0], "Java");
+    strcpy(test_input_string->array2d[1], "Python");
+    strcpy(test_input_string->array2d[2], "C++");
+    strcpy(test_input_string->array2d[3], "Coffee");
+    strcpy(test_input_string->array2d[4], "Silver");
+
+    test_input_string->row_count = 5; 
+    assert(end_of_file_reached(test_input_string) == false);
+    test_input_string->y_position = 4; 
+    test_input_string->x_position = strlen(test_input_string->array2d[4]) - 1; 
+    assert(end_of_file_reached(test_input_string) == true); 
 }
