@@ -5,9 +5,9 @@ which will eliminate spaces and new lines - \n and \r
 #defines
 then maybe another look at is at start.*/
 
-//Need to check functions to see if I want to fail if the file ends during the function
-//If reach endfile at any point apart from via Prog close bracket, exit the program
-//For each line in the file going to read it into a string 
+// Need to check functions to see if I want to fail if the file ends during the function
+// If reach endfile at any point apart from via Prog close bracket, exit the program
+// For each line in the file going to read it into a string
 
 void Prog(InputString *input_string);
 void INSTRCTS(InputString *input_string);
@@ -19,6 +19,7 @@ void VAR(InputString *input_string);
 void LITERAL(InputString *input_string);
 int currentx_position(InputString *input_string);
 bool is_at_start(char *inputstring, char *keyword, int inputposition);
+bool end_of_file_reached(InputString *input_string);
 void test(void);
 
 int main(void)
@@ -63,7 +64,8 @@ void INSTRCT(InputString *input_string)
         exit(EXIT_FAILURE);
     }
 
-    bool haspassed = LISTFUNC(input_string) || IOFUNC(input_string);
+    bool haspassed = false;
+    haspassed = LISTFUNC(input_string) || IOFUNC(input_string);
 
     if (!haspassed)
     {
@@ -106,15 +108,26 @@ bool is_at_start(char *inputstring, char *keyword, int inputposition)
     return true;
 }
 
+bool end_of_file_reached(InputString *input_string)
+{
+    int y_length = strlen(input_string->array2d[input_string->y_position]);
+
+    if (input_string->y_position == input_string->row_count-1 &&
+        input_string->x_position == y_length-1)
+    {
+        // End of file reached
+        return true;
+    }
+
+}
+
 bool get_next_char(InputString *input_string)
 {
     int y_length = strlen(input_string->array2d[input_string->y_position]);
     while (true)
     {
-        if (input_string->y_position == input_string->row_count &&
-            y_length == input_string->x_position)
+        if (!end_of_file_reached(input_string))
         {
-            // End of file reached
             return false;
         }
         else if (input_string->array2d[input_string->y_position][input_string->x_position] == '\n')
@@ -155,6 +168,7 @@ bool IOFUNC(InputString *input_string)
 
 void LIST(InputString *input_string)
 {
+    bool functionchecker = false;
     if (is_at_start(input_string->array2d[input_string->y_position], "'", input_string->x_position))
     {
         LITERAL(input_string);
@@ -165,7 +179,16 @@ void LIST(InputString *input_string)
     }
     else if (is_at_start(input_string->array2d[input_string->y_position], "(", input_string->x_position))
     {
-        LISTFUNC(input_string);
+        if (!LISTFUNC(input_string))
+        {
+            printf("Expected a CAR, CONS or CDR?\n");
+            exit(EXIT_FAILURE);
+        }
+        else
+        {
+            input_string->x_position++;
+        }
+
         if (input_string->x_position != ')')
         {
             printf("Expected a ')' at row %i col %i \n", input_string->y_position, input_string->x_position);
@@ -202,6 +225,12 @@ void LITERAL(InputString *input_string)
     {
         input_string->x_position++;
     }
+
+    else if (strlen(input_string->array2d[input_string->y_position][input_string->x_position]) == 0)
+    {
+        printf("Given string is empty?\n");
+    }
+
     else
     {
         printf("Expected a number from 1-9 or a list of numbers :) \n");
@@ -222,4 +251,15 @@ void test(void)
     assert(is_at_start(test_input_string, test_fail, test_input_position) == false);
     assert(is_at_start(test_input_string, test_fail, 5) == true);
     assert(is_at_start(test_input_string, "likes", 5) == true);
+
+    /*TestInputString *test_input_struct; 
+    test_input_struct->test_array2d= 
+        {
+            {'J', 'a', 'v', 'a', '\0'},
+            {'P', 'y', 't', 'h', 'o', 'n', '\0'},
+            {'C', '+', '+', '\0'},
+            {'H', 'T', 'M', 'L', '\0'},
+            {'S', 'Q', 'L', '\0'}};
+
+    assert(end_of_file_reached(test_array2d) == false);*/
 }

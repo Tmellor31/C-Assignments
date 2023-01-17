@@ -8,11 +8,12 @@
 #define MAXXSIZE 50
 #define MAXYSIZE 50
 #define SPACE ' '
+#define NEWLINE '\n'
 
 typedef struct InputString
 {
     char array2d[MAXXSIZE][MAXYSIZE];
     int y_position;
     int x_position;
-    int row_count; 
-}InputString;
+    int row_count;
+} InputString;
