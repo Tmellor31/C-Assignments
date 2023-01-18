@@ -21,7 +21,7 @@ void test(void);
 
 int main(void)
 {
-    // test();
+    test();
     InputString *main_input_string = ncalloc(1, sizeof(InputString));
     strcpy(main_input_string->array2d[0], "(");
     strcpy(main_input_string->array2d[1], " ( CAR '2' ) ");
