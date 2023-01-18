@@ -30,6 +30,17 @@ void test(void);
 int main(void)
 {
     test();
+    InputString *main_input_string = ncalloc(1, sizeof(InputString));
+    strcpy(main_input_string->array2d[0], "(");
+    strcpy(main_input_string->array2d[1], " ( CAR '2' ) ");
+    strcpy(main_input_string->array2d[2], ")  ");
+    strcpy(main_input_string->array2d[3], "");
+    strcpy(main_input_string->array2d[4], "");
+    main_input_string->x_position = 0;
+    main_input_string->y_position = 0;
+    main_input_string->row_count = 3;
+    Prog(main_input_string);
+    free(main_input_string);
 }
 
 int currentx_position(InputString *input_string)
@@ -39,26 +50,23 @@ int currentx_position(InputString *input_string)
 
 void Prog(InputString *input_string)
 {
-    if (input_string->array2d[0][0] != '(')
+    if (input_string->array2d[input_string->y_position][input_string->x_position] != '(')
     {
         printf("Was expecting a '('\n");
         exit(EXIT_FAILURE);
     }
-    move_next_char(input_string);
     INSTRCTS(input_string);
 }
 
 void INSTRCTS(InputString *input_string)
 {
+    move_next_char(input_string);
     if (input_string->array2d[input_string->y_position][input_string->x_position] == ')')
     {
-        get_next_char(input_string);
+        return;
     }
-    else
-    {
-        INSTRCT(input_string);
-        INSTRCTS(input_string);
-    }
+    INSTRCT(input_string);
+    INSTRCTS(input_string);
 }
 
 void INSTRCT(InputString *input_string)
@@ -68,7 +76,7 @@ void INSTRCT(InputString *input_string)
         printf("Expected an '(' at row %i col %i \n", input_string->y_position, input_string->x_position);
         exit(EXIT_FAILURE);
     }
-
+    move_next_char(input_string);
     bool haspassed = false;
     haspassed = LISTFUNC(input_string) || IOFUNC(input_string);
 
@@ -83,17 +91,21 @@ bool LISTFUNC(InputString *input_string)
 {
     if (is_at_start(input_string->array2d[input_string->y_position], "CAR", input_string->x_position))
     {
+        input_string->x_position += strlen("CAR");
         LIST(input_string);
         return true;
     }
     else if (is_at_start(input_string->array2d[input_string->y_position], "CDR", input_string->x_position))
     {
+        input_string->x_position += strlen("CDR");
         LIST(input_string);
         return true;
     }
     else if (is_at_start(input_string->array2d[input_string->y_position], "CONS", input_string->x_position))
     {
+        input_string->x_position += strlen("CONS");
         LIST(input_string);
+        input_string->x_position += strlen("CONS");
         LIST(input_string);
         return true;
     }
@@ -148,7 +160,7 @@ void move_next_char(InputString *input_string)
 {
     if (!get_next_char(input_string))
     {
-        printf("Next character not found\n");
+        printf("Next character not found after row %i col %i\n", input_string->x_position, input_string->y_position);
         exit(EXIT_FAILURE);
     }
 }
@@ -209,7 +221,7 @@ bool IOFUNC(InputString *input_string)
 
 void LIST(InputString *input_string)
 {
-    if (is_at_start(input_string->array2d[input_string->y_position], "'", input_string->x_position))
+    if (get_next_quote(input_string))
     {
         LITERAL(input_string);
     }
@@ -219,14 +231,14 @@ void LIST(InputString *input_string)
     }
     else if (is_at_start(input_string->array2d[input_string->y_position], "(", input_string->x_position))
     {
-        if (!LISTFUNC(input_string))
+        if (LISTFUNC(input_string))
         {
-            printf("Expected a CAR, CONS or CDR?\n");
-            exit(EXIT_FAILURE);
+            move_next_char(input_string);
         }
         else
         {
-            move_next_char(input_string);
+            printf("Expected a CAR, CONS or CDR?\n");
+            exit(EXIT_FAILURE);
         }
 
         if (input_string->x_position != ')')
@@ -267,7 +279,7 @@ void LITERAL(InputString *input_string)
     if (!get_next_quote(input_string))
     {
         printf("Unmatched quote at row %i col %i", input_string->y_position, input_string->x_position);
-        exit(EXIT_FAILURE); 
+        exit(EXIT_FAILURE);
     }
 }
 
