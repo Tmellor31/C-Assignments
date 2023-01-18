@@ -1,13 +1,5 @@
 #include "nuclei.h"
-/*Finish main parsing functions
-Add asserts for correct results - including where get position ++ change for get next char
-which will eliminate spaces and new lines - \n and \r
-#defines
-then maybe another look at is at start.*/
-
-// Need to check functions to see if I want to fail if the file ends during the function
-// If reach endfile at any point apart from via Prog close bracket, exit the program
-// For each line in the file going to read it into a string
+/*Put current position everywhere relevant, file reading, #define CAR CDR ALL KEYWORDS*/
 
 void Prog(InputString *input_string);
 void INSTRCTS(InputString *input_string);
@@ -29,23 +21,23 @@ void test(void);
 
 int main(void)
 {
-    test();
+    // test();
     InputString *main_input_string = ncalloc(1, sizeof(InputString));
     strcpy(main_input_string->array2d[0], "(");
     strcpy(main_input_string->array2d[1], " ( CAR '2' ) ");
-    strcpy(main_input_string->array2d[2], ")  ");
+    strcpy(main_input_string->array2d[2], " (SET B '(1 2 3)' )");
     strcpy(main_input_string->array2d[3], "");
-    strcpy(main_input_string->array2d[4], "");
+    strcpy(main_input_string->array2d[4], ")");
     main_input_string->x_position = 0;
     main_input_string->y_position = 0;
-    main_input_string->row_count = 3;
+    main_input_string->row_count = 5;
     Prog(main_input_string);
     free(main_input_string);
 }
 
-int currentx_position(InputString *input_string)
+char current_position(InputString *input_string)
 {
-    return input_string->x_position;
+    return input_string->array2d[input_string->y_position][input_string->x_position];
 }
 
 void Prog(InputString *input_string)
@@ -85,6 +77,13 @@ void INSTRCT(InputString *input_string)
         printf("Expected CAR,CDR,CONS,PRINT, or SET?\n");
         exit(EXIT_FAILURE);
     }
+
+    get_next_char(input_string);
+    if (input_string->array2d[input_string->y_position][input_string->x_position] != ')')
+    {
+        printf("Expected an ')' at row %i col %i \n", input_string->y_position, input_string->x_position);
+        exit(EXIT_FAILURE);
+    }
 }
 
 bool LISTFUNC(InputString *input_string)
@@ -92,26 +91,57 @@ bool LISTFUNC(InputString *input_string)
     if (is_at_start(input_string->array2d[input_string->y_position], "CAR", input_string->x_position))
     {
         input_string->x_position += strlen("CAR");
+        get_next_char(input_string);
         LIST(input_string);
         return true;
     }
     else if (is_at_start(input_string->array2d[input_string->y_position], "CDR", input_string->x_position))
     {
         input_string->x_position += strlen("CDR");
+        get_next_char(input_string);
         LIST(input_string);
         return true;
     }
     else if (is_at_start(input_string->array2d[input_string->y_position], "CONS", input_string->x_position))
     {
         input_string->x_position += strlen("CONS");
+        get_next_char(input_string);
         LIST(input_string);
         input_string->x_position += strlen("CONS");
+        get_next_char(input_string);
         LIST(input_string);
         return true;
     }
     else
     {
         // No CAR,CDR or CONS found
+        return false;
+    }
+}
+
+bool IOFUNC(InputString *input_string)
+{
+    printf("HEY\n");
+    if (is_at_start(input_string->array2d[input_string->y_position], "SET", input_string->x_position))
+    {
+        input_string->x_position += strlen("SET");
+        printf("row %i col %i\n", input_string->y_position, input_string->x_position);
+        move_next_char(input_string);
+        VAR(input_string);
+        LIST(input_string);
+        return true;
+    }
+
+    else if (is_at_start(input_string->array2d[input_string->y_position], "PRINT", input_string->x_position))
+    {
+        move_next_char(input_string);
+        VAR(input_string);
+        return true;
+    }
+
+    else
+    {
+        // NO PRINT OR SET found
         return false;
     }
 }
@@ -197,31 +227,9 @@ bool find_next_target(InputString *input_string, bool (*char_matches)(char targe
     return false;
 }
 
-bool IOFUNC(InputString *input_string)
-{
-    if (is_at_start(input_string->array2d[input_string->y_position], "SET", input_string->x_position))
-    {
-        VAR(input_string);
-        LIST(input_string);
-        return true;
-    }
-
-    else if (is_at_start(input_string->array2d[input_string->y_position], "PRINT", input_string->x_position))
-    {
-        VAR(input_string);
-        return true;
-    }
-
-    else
-    {
-        // NO PRINT OR SET found
-        return false;
-    }
-}
-
 void LIST(InputString *input_string)
 {
-    if (get_next_quote(input_string))
+    if (input_string->array2d[input_string->y_position][input_string->x_position] == '\'')
     {
         LITERAL(input_string);
     }
@@ -237,7 +245,7 @@ void LIST(InputString *input_string)
         }
         else
         {
-            printf("Expected a CAR, CONS or CDR?\n");
+            printf("Expected a CAR, CONS or CDR? at row %i col %i\n", input_string->y_position, input_string->x_position);
             exit(EXIT_FAILURE);
         }
 
@@ -281,6 +289,7 @@ void LITERAL(InputString *input_string)
         printf("Unmatched quote at row %i col %i", input_string->y_position, input_string->x_position);
         exit(EXIT_FAILURE);
     }
+    printf("literalrow %i literalcol %i \n ", input_string->y_position, input_string->x_position);
 }
 
 void test(void)
@@ -316,7 +325,6 @@ void test(void)
     assert(test_input_string->array2d[test_input_string->y_position][test_input_string->x_position] == '+');
 
     assert(get_next_char(test_input_string));
-    printf("%c\n", test_input_string->array2d[test_input_string->y_position][test_input_string->x_position]);
     assert(test_input_string->y_position == 3);
     assert(test_input_string->x_position == 0);
     (move_next_char(test_input_string));
