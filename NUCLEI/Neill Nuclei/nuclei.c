@@ -165,11 +165,11 @@ bool get_next_quote(InputString *input_string)
 
 bool find_next_target(InputString *input_string, bool (*char_matches)(char target))
 {
-    int col = input_string->x_position + 1; 
+    int col = input_string->x_position + 1;
     for (int row = input_string->y_position; row < input_string->row_count; row++)
     {
         int row_length = strlen(input_string->array2d[row]);
-        for (;col < row_length; col++)
+        for (; col < row_length; col++)
         {
 
             if (char_matches(input_string->array2d[row][col]))
@@ -180,7 +180,7 @@ bool find_next_target(InputString *input_string, bool (*char_matches)(char targe
                 return true;
             }
         }
-        col = 0; 
+        col = 0;
     }
     return false;
 }
@@ -264,33 +264,11 @@ void LITERAL(InputString *input_string)
         printf("Expected a single quote at the start of Literal\n");
         exit(EXIT_FAILURE);
     }
-
-    // move to end of the string
-    // input_string->array2d[input_string->y_position] =
-
-    /*if (input_string->array2d[input_string->y_position][input_string->x_position] == '\'')
+    if (!get_next_quote(input_string))
     {
-        create_literal_list(input_string);
-    }*/
-
-    /*input_string->x_position++;
-    if (input_string->array2d[input_string->y_position][input_string->x_position] == '\'' ||
-        (input_string->array2d[input_string->y_position][input_string->x_position] >= '0' &&
-            input_string->array2d[input_string->y_position][input_string->x_position] <= '9'))
-    {
-        move_next_char(input_string);
+        printf("Unmatched quote at row %i col %i", input_string->y_position, input_string->x_position);
+        exit(EXIT_FAILURE); 
     }
-
-    else if ((input_string->array2d[input_string->y_position][input_string->x_position]) == '')
-    {
-        printf("Given string is empty?\n");
-    }
-
-    else
-    {
-        printf("Expected a number from 1-9 or a list of numbers :) \n");
-        exit(EXIT_FAILURE);
-    }*/
 }
 
 void test(void)
@@ -320,14 +298,14 @@ void test(void)
     test_input_string->y_position = 4;
     test_input_string->x_position = strlen(test_input_string->array2d[4]) - 1;
     assert(end_of_file_reached(test_input_string) == true);
-    test_input_string->y_position = 2; 
-    test_input_string->x_position = 2; 
+    test_input_string->y_position = 2;
+    test_input_string->x_position = 2;
 
-    assert(test_input_string->array2d[test_input_string->y_position][test_input_string->x_position] == '+' );
+    assert(test_input_string->array2d[test_input_string->y_position][test_input_string->x_position] == '+');
 
     assert(get_next_char(test_input_string));
     printf("%c\n", test_input_string->array2d[test_input_string->y_position][test_input_string->x_position]);
     assert(test_input_string->y_position == 3);
-    assert(test_input_string->x_position == 0); 
-    (move_next_char(test_input_string)); 
+    assert(test_input_string->x_position == 0);
+    (move_next_char(test_input_string));
 }
