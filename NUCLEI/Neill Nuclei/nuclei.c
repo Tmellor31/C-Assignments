@@ -22,6 +22,32 @@ void test(void);
 int main(void)
 {
     test();
+    /*char string[50];
+    FILE *fp = fopen(argv[argc - 1], "r");
+    if (fp == NULL)
+    {
+        printf("Cannot open %s\n", argv[argc - 1]);
+        exit(EXIT_FAILURE);
+    }
+    if (!fp)
+    {
+        fprintf(stderr, "Cannot read from %s\n", argv[argc - 1]);
+        exit(EXIT_FAILURE);
+    }
+
+    fgets(string, 200, fp);
+    for (unsigned int i = 0; i < strlen(string); i++)
+    {
+        if (string[i] == '\n')
+        {
+            putchar('N');
+        }
+        else
+        {
+            putchar(string[i]);
+        }
+    }
+    fclose(fp);*/
     InputString *main_input_string = ncalloc(1, sizeof(InputString));
     strcpy(main_input_string->array2d[0], "(");
     strcpy(main_input_string->array2d[1], " ( CAR '2' ) ");
@@ -32,7 +58,9 @@ int main(void)
     main_input_string->y_position = 0;
     main_input_string->row_count = 5;
     Prog(main_input_string);
+    // Prog(string);
     free(main_input_string);
+    // free(string);
 }
 
 char current_position(InputString *input_string)
@@ -42,7 +70,7 @@ char current_position(InputString *input_string)
 
 void Prog(InputString *input_string)
 {
-    if (input_string->array2d[input_string->y_position][input_string->x_position] != '(')
+    if (current_position(input_string) != '(')
     {
         printf("Was expecting a '('\n");
         exit(EXIT_FAILURE);
@@ -53,7 +81,7 @@ void Prog(InputString *input_string)
 void INSTRCTS(InputString *input_string)
 {
     move_next_char(input_string);
-    if (input_string->array2d[input_string->y_position][input_string->x_position] == ')')
+    if (current_position(input_string) == ')')
     {
         return;
     }
@@ -63,7 +91,7 @@ void INSTRCTS(InputString *input_string)
 
 void INSTRCT(InputString *input_string)
 {
-    if (input_string->array2d[input_string->y_position][input_string->x_position] != '(')
+    if (current_position(input_string) != '(')
     {
         printf("Expected an '(' at row %i col %i \n", input_string->y_position, input_string->x_position);
         exit(EXIT_FAILURE);
@@ -79,7 +107,7 @@ void INSTRCT(InputString *input_string)
     }
 
     get_next_char(input_string);
-    if (input_string->array2d[input_string->y_position][input_string->x_position] != ')')
+    if (current_position(input_string) != ')')
     {
         printf("Expected an ')' at row %i col %i \n", input_string->y_position, input_string->x_position);
         exit(EXIT_FAILURE);
@@ -229,7 +257,7 @@ bool find_next_target(InputString *input_string, bool (*char_matches)(char targe
 
 void LIST(InputString *input_string)
 {
-    if (input_string->array2d[input_string->y_position][input_string->x_position] == '\'')
+    if (current_position(input_string) == '\'')
     {
         LITERAL(input_string);
     }
@@ -264,8 +292,8 @@ void LIST(InputString *input_string)
 
 void VAR(InputString *input_string)
 {
-    if (input_string->array2d[input_string->y_position][input_string->x_position] >= 'A' &&
-        input_string->array2d[input_string->y_position][input_string->x_position] <= 'Z')
+    if (current_position(input_string) >= 'A' &&
+        current_position(input_string) <= 'Z')
     {
         move_next_char(input_string);
     }
@@ -278,7 +306,7 @@ void VAR(InputString *input_string)
 
 void LITERAL(InputString *input_string)
 {
-    if (input_string->array2d[input_string->y_position][input_string->x_position] != '\'')
+    if (current_position(input_string) != '\'')
 
     {
         printf("Expected a single quote at the start of Literal\n");
