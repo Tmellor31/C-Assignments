@@ -1,7 +1,7 @@
 #include "nuclei.h"
 // Moves should be done in the parent function, when either calling the child or returning from the child
 
-void Prog(InputString *input_string);
+void PROG(InputString *input_string);
 void INSTRCTS(InputString *input_string);
 void INSTRCT(InputString *input_string);
 bool LISTFUNC(InputString *input_string);
@@ -36,21 +36,24 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    while (fgets(primary_input_string->array2d[primary_input_string->row_count], 300, fp) != NULL)
+    while (fgets(primary_input_string->array2d[primary_input_string->row_count], MAXXSIZE, fp) != NULL)
     {
         primary_input_string->row_count++;
     }
     fclose(fp);
+	PROG(primary_input_string);
     InputString *main_input_string = ncalloc(1, sizeof(InputString));
     strcpy(main_input_string->array2d[main_input_string->row_count++], "(");
     strcpy(main_input_string->array2d[main_input_string->row_count++], " ( CAR '2' ) ");
     strcpy(main_input_string->array2d[main_input_string->row_count++], " (SET B '(1 2 3)' )");
     strcpy(main_input_string->array2d[main_input_string->row_count++], "");
     strcpy(main_input_string->array2d[main_input_string->row_count++], ")");
-    Prog(primary_input_string);
-    Prog(main_input_string);
-    free(primary_input_string);
+    PROG(main_input_string);
+
+	free(primary_input_string);
     free(main_input_string);
+
+	return 0;
 }
 
 char current_position(InputString *input_string)
@@ -58,7 +61,7 @@ char current_position(InputString *input_string)
     return input_string->array2d[input_string->y_position][input_string->x_position];
 }
 
-void Prog(InputString *input_string)
+void PROG(InputString *input_string)
 {
     if (current_position(input_string) != OBRACKET)
     {
@@ -72,14 +75,16 @@ void Prog(InputString *input_string)
 
 void INSTRCTS(InputString *input_string)
 {
-    if (current_position(input_string) == CBRACKET)
-    {
-        return;
+  if (current_position(input_string) == CBRACKET)
+	{
+	  printf("Close bracket for INSTRUCTS found");
+	  get_next_char(input_string);
+	  return;        
     }
-    INSTRCT(input_string);
-    INSTRCTS(input_string);
-    printf("Completed loop\n");
-    printf("Position is row %i col %i\n", input_string->y_position, input_string->x_position);  
+  INSTRCT(input_string);
+  INSTRCTS(input_string);
+  printf("Completed loop\n");
+  printf("Position is row %i col %i\n", input_string->y_position, input_string->x_position);
 }
 
 void INSTRCT(InputString *input_string)
@@ -101,9 +106,11 @@ void INSTRCT(InputString *input_string)
 
     if (current_position(input_string) != CBRACKET)
     {
-        printf("Expected an ')' at row %i col %i \n", input_string->y_position, input_string->x_position);
+	  printf("Expected an ')' at row %i col %i. Received '%c' \n", input_string->y_position, input_string->x_position, current_position(input_string));
         exit(EXIT_FAILURE);
     }
+	printf("Closing bracket for INSTRUCT at line %i col %i\n", input_string->y_position, input_string->x_position);
+	move_next_char(input_string);
 }
 
 bool LISTFUNC(InputString *input_string)
@@ -111,9 +118,12 @@ bool LISTFUNC(InputString *input_string)
     if (is_at_start(input_string->array2d[input_string->y_position], "CAR", input_string->x_position))
     {
         input_string->x_position += strlen("CAR");
-        printf("row %i col %i\n", input_string->y_position, input_string->x_position);
-        get_next_char(input_string);
+		get_next_char(input_string);
         LIST(input_string);
+		printf("LIST ended at line %i col %i. Current position: '%c'\n",
+			   input_string->y_position,
+			   input_string->x_position,
+			   current_position(input_string));
         return true;
     }
     else if (is_at_start(input_string->array2d[input_string->y_position], "CDR", input_string->x_position))
@@ -128,7 +138,6 @@ bool LISTFUNC(InputString *input_string)
         input_string->x_position += strlen("CONS");
         get_next_char(input_string);
         LIST(input_string);
-        get_next_char(input_string);
         LIST(input_string);
         return true;
     }
@@ -141,12 +150,10 @@ bool LISTFUNC(InputString *input_string)
 
 bool IOFUNC(InputString *input_string)
 {
-    printf("HEYyouriniofunc\n");
-    if (is_at_start(input_string->array2d[input_string->y_position], "SET", input_string->x_position))
+  if (is_at_start(input_string->array2d[input_string->y_position], "SET", input_string->x_position))
     {
         input_string->x_position += strlen("SET");
-        printf("row %i col %i\n", input_string->y_position, input_string->x_position);
-        move_next_char(input_string);
+		move_next_char(input_string);
         VAR(input_string);
         LIST(input_string);
         return true;
@@ -227,7 +234,7 @@ void move_next_char(InputString *input_string)
 {
     if (!get_next_char(input_string))
     {
-        printf("Next character not found after row %i col %i\n", input_string->x_position, input_string->y_position);
+        printf("Next character not found after line %i col %i\n", input_string->y_position, input_string->x_position);
         exit(EXIT_FAILURE);
     }
 }
@@ -266,12 +273,10 @@ bool find_next_target(InputString *input_string, bool (*char_matches)(char targe
 
 void LIST(InputString *input_string)
 {
-    printf("CURRENT CHAR IS %c\n", current_position(input_string));
-    if (current_position(input_string) == '\'')
+  if (current_position(input_string) == '\'')
     {
         LITERAL(input_string);
-        move_next_char(input_string);
-        printf("row %i col %i\n", input_string->y_position, input_string->x_position);
+		printf("row %i col %i\n", input_string->y_position, input_string->x_position);
     }
     else if (is_at_start(input_string->array2d[input_string->y_position], "NIL", input_string->x_position))
     {
@@ -307,7 +312,6 @@ void LIST(InputString *input_string)
 void LITERAL(InputString *input_string)
 {
     if (current_position(input_string) != '\'')
-
     {
         printf("Expected a single quote at the start of Literal\n");
         exit(EXIT_FAILURE);
@@ -317,7 +321,8 @@ void LITERAL(InputString *input_string)
         printf("Unmatched quote at row %i col %i", input_string->y_position, input_string->x_position);
         exit(EXIT_FAILURE);
     }
-    printf("literalrow %i literalcol %i \n ", input_string->y_position, input_string->x_position);
+	move_next_char(input_string);
+    printf("Closing quote at line %i col %i \n ", input_string->y_position, input_string->x_position);
 }
 
 void test(void)
