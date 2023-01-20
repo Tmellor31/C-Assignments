@@ -70,7 +70,7 @@ char current_position(InputString *input_string)
 
 void Prog(InputString *input_string)
 {
-    if (current_position(input_string) != '(')
+    if (current_position(input_string) != OBRACKET)
     {
         printf("Was expecting a '('\n");
         exit(EXIT_FAILURE);
@@ -81,7 +81,7 @@ void Prog(InputString *input_string)
 void INSTRCTS(InputString *input_string)
 {
     move_next_char(input_string);
-    if (current_position(input_string) == ')')
+    if (current_position(input_string) == CBRACKET)
     {
         return;
     }
@@ -91,7 +91,7 @@ void INSTRCTS(InputString *input_string)
 
 void INSTRCT(InputString *input_string)
 {
-    if (current_position(input_string) != '(')
+    if (current_position(input_string) != OBRACKET)
     {
         printf("Expected an '(' at row %i col %i \n", input_string->y_position, input_string->x_position);
         exit(EXIT_FAILURE);
@@ -107,7 +107,7 @@ void INSTRCT(InputString *input_string)
     }
 
     get_next_char(input_string);
-    if (current_position(input_string) != ')')
+    if (current_position(input_string) != CBRACKET)
     {
         printf("Expected an ')' at row %i col %i \n", input_string->y_position, input_string->x_position);
         exit(EXIT_FAILURE);
@@ -277,7 +277,7 @@ void LIST(InputString *input_string)
             exit(EXIT_FAILURE);
         }
 
-        if (input_string->x_position != ')')
+        if (input_string->x_position != CBRACKET)
         {
             printf("Expected a ')' at row %i col %i \n", input_string->y_position, input_string->x_position);
             exit(EXIT_FAILURE);
