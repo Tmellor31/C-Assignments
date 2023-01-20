@@ -9,8 +9,8 @@
 #define MAXYSIZE 50
 #define SPACE ' '
 #define NEWLINE '\n'
-#define OBRACKET '('
-#define CBRACKET ')' 
+#define OPEN_BRACKET '('
+#define CLOSE_BRACKET ')' 
 
 typedef struct InputString
 {

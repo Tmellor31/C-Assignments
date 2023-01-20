@@ -63,7 +63,7 @@ char current_position(InputString *input_string)
 
 void PROG(InputString *input_string)
 {
-    if (current_position(input_string) != OBRACKET)
+    if (current_position(input_string) != OPEN_BRACKET)
     {
         printf("Was expecting a '('\n");
         exit(EXIT_FAILURE);
@@ -75,7 +75,7 @@ void PROG(InputString *input_string)
 
 void INSTRCTS(InputString *input_string)
 {
-  if (current_position(input_string) == CBRACKET)
+  if (current_position(input_string) == CLOSE_BRACKET)
 	{
 	  printf("Close bracket for INSTRUCTS found");
 	  get_next_char(input_string);
@@ -89,7 +89,7 @@ void INSTRCTS(InputString *input_string)
 
 void INSTRCT(InputString *input_string)
 {
-    if (current_position(input_string) != OBRACKET)
+    if (current_position(input_string) != OPEN_BRACKET)
     {
         printf("Expected an '(' at row %i col %i \n", input_string->y_position, input_string->x_position);
         exit(EXIT_FAILURE);
@@ -104,7 +104,7 @@ void INSTRCT(InputString *input_string)
         exit(EXIT_FAILURE);
     }
 
-    if (current_position(input_string) != CBRACKET)
+    if (current_position(input_string) != CLOSE_BRACKET)
     {
 	  printf("Expected an ')' at row %i col %i. Received '%c' \n", input_string->y_position, input_string->x_position, current_position(input_string));
         exit(EXIT_FAILURE);
@@ -282,7 +282,7 @@ void LIST(InputString *input_string)
     {
         input_string->x_position += strlen("NIL");
     }
-    else if (current_position(input_string) == OBRACKET)
+    else if (current_position(input_string) == OPEN_BRACKET)
     {
         move_next_char(input_string);
         if (LISTFUNC(input_string))
@@ -295,7 +295,7 @@ void LIST(InputString *input_string)
             exit(EXIT_FAILURE);
         }
 
-        if (current_position(input_string) != CBRACKET)
+        if (current_position(input_string) != CLOSE_BRACKET)
         {
             printf("Expected a ')' at row %i col %i \n", input_string->y_position, input_string->x_position);
             exit(EXIT_FAILURE);
