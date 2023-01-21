@@ -5,8 +5,8 @@
 #include <math.h>
 #include <ctype.h>
 #include "general.h"
-#define MAXXSIZE 50
-#define MAXYSIZE 50
+#define MAXLINENO 50
+#define MAXLINEWIDTH 50
 #define SPACE ' '
 #define NEWLINE '\n'
 #define OPEN_BRACKET '('
@@ -14,8 +14,8 @@
 
 typedef struct InputString
 {
-    char array2d[MAXXSIZE][MAXYSIZE];
-    int y_position;
-    int x_position;
+    char array2d[MAXLINENO][MAXLINEWIDTH];
+    int row;
+    int col;
     int row_count;
 } InputString;

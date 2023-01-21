@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    while (fgets(primary_input_string->array2d[primary_input_string->row_count], MAXXSIZE, fp) != NULL)
+    while (fgets(primary_input_string->array2d[primary_input_string->row_count], MAXLINEWIDTH, fp) != NULL)
     {
         primary_input_string->row_count++;
     }
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
 char current_position(InputString *input_string)
 {
-    return input_string->array2d[input_string->y_position][input_string->x_position];
+    return input_string->array2d[input_string->row][input_string->col];
 }
 
 void PROG(InputString *input_string)
@@ -69,7 +69,7 @@ void PROG(InputString *input_string)
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
-    printf("After moving at start of next loop position is row %i col %i\n", input_string->y_position, input_string->x_position);
+    printf("After moving at start of next loop position is row %i col %i\n", input_string->row, input_string->col);
     INSTRCTS(input_string);
 }
 
@@ -84,14 +84,14 @@ void INSTRCTS(InputString *input_string)
   INSTRCT(input_string);
   INSTRCTS(input_string);
   printf("Completed loop\n");
-  printf("Position is row %i col %i\n", input_string->y_position, input_string->x_position);
+  printf("Position is row %i col %i\n", input_string->row, input_string->col);
 }
 
 void INSTRCT(InputString *input_string)
 {
     if (current_position(input_string) != OPEN_BRACKET)
     {
-        printf("Expected an '(' at row %i col %i \n", input_string->y_position, input_string->x_position);
+        printf("Expected an '(' at row %i col %i \n", input_string->row, input_string->col);
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
@@ -106,36 +106,36 @@ void INSTRCT(InputString *input_string)
 
     if (current_position(input_string) != CLOSE_BRACKET)
     {
-	  printf("Expected an ')' at row %i col %i. Received '%c' \n", input_string->y_position, input_string->x_position, current_position(input_string));
+	  printf("Expected an ')' at row %i col %i. Received '%c' \n", input_string->row, input_string->col, current_position(input_string));
         exit(EXIT_FAILURE);
     }
-	printf("Closing bracket for INSTRUCT at line %i col %i\n", input_string->y_position, input_string->x_position);
+	printf("Closing bracket for INSTRUCT at line %i col %i\n", input_string->row, input_string->col);
 	move_next_char(input_string);
 }
 
 bool LISTFUNC(InputString *input_string)
 {
-    if (is_at_start(input_string->array2d[input_string->y_position], "CAR", input_string->x_position))
+    if (is_at_start(input_string->array2d[input_string->row], "CAR", input_string->col))
     {
-        input_string->x_position += strlen("CAR");
+        input_string->col += strlen("CAR");
 		get_next_char(input_string);
         LIST(input_string);
 		printf("LIST ended at line %i col %i. Current position: '%c'\n",
-			   input_string->y_position,
-			   input_string->x_position,
+			   input_string->row,
+			   input_string->col,
 			   current_position(input_string));
         return true;
     }
-    else if (is_at_start(input_string->array2d[input_string->y_position], "CDR", input_string->x_position))
+    else if (is_at_start(input_string->array2d[input_string->row], "CDR", input_string->col))
     {
-        input_string->x_position += strlen("CDR");
+        input_string->col += strlen("CDR");
         get_next_char(input_string);
         LIST(input_string);
         return true;
     }
-    else if (is_at_start(input_string->array2d[input_string->y_position], "CONS", input_string->x_position))
+    else if (is_at_start(input_string->array2d[input_string->row], "CONS", input_string->col))
     {
-        input_string->x_position += strlen("CONS");
+        input_string->col += strlen("CONS");
         get_next_char(input_string);
         LIST(input_string);
         LIST(input_string);
@@ -150,19 +150,19 @@ bool LISTFUNC(InputString *input_string)
 
 bool IOFUNC(InputString *input_string)
 {
-  if (is_at_start(input_string->array2d[input_string->y_position], "SET", input_string->x_position))
+  if (is_at_start(input_string->array2d[input_string->row], "SET", input_string->col))
     {
-        input_string->x_position += strlen("SET");
+        input_string->col += strlen("SET");
 		move_next_char(input_string);
         VAR(input_string);
         LIST(input_string);
         return true;
     }
 
-    else if (is_at_start(input_string->array2d[input_string->y_position], "PRINT", input_string->x_position))
+    else if (is_at_start(input_string->array2d[input_string->row], "PRINT", input_string->col))
     {
         printf("PRINT\n");
-        input_string->x_position += strlen("PRINT");
+        input_string->col += strlen("PRINT");
         move_next_char(input_string);
         VAR(input_string);
         return true;
@@ -181,11 +181,11 @@ void VAR(InputString *input_string)
         current_position(input_string) <= 'Z')
     {
         move_next_char(input_string); 
-        printf("row %i col %i\n", input_string->y_position, input_string->x_position);
+        printf("row %i col %i\n", input_string->row, input_string->col);
     }
     else
     {
-        printf("Expected a character from A-Z at row %i col %i \n", input_string->y_position, input_string->x_position);
+        printf("Expected a character from A-Z at row %i col %i \n", input_string->row, input_string->col);
         exit(EXIT_FAILURE);
     }
 }
@@ -204,10 +204,10 @@ bool is_at_start(char *inputstring, char *keyword, int inputposition)
 
 bool end_of_file_reached(InputString *input_string)
 {
-    int row_length = strlen(input_string->array2d[input_string->y_position]);
+    int row_length = strlen(input_string->array2d[input_string->row]);
 
-    if (input_string->y_position == input_string->row_count - 1 &&
-        input_string->x_position == row_length - 1)
+    if (input_string->row == input_string->row_count - 1 &&
+        input_string->col == row_length - 1)
     {
         // End of file reached
         return true;
@@ -234,7 +234,7 @@ void move_next_char(InputString *input_string)
 {
     if (!get_next_char(input_string))
     {
-        printf("Next character not found after line %i col %i\n", input_string->y_position, input_string->x_position);
+        printf("Next character not found after line %i col %i\n", input_string->row, input_string->col);
         exit(EXIT_FAILURE);
     }
 }
@@ -251,8 +251,8 @@ bool get_next_quote(InputString *input_string)
 
 bool find_next_target(InputString *input_string, bool (*char_matches)(char target))
 {
-    int col = input_string->x_position + 1;
-    for (int row = input_string->y_position; row < input_string->row_count; row++)
+    int col = input_string->col + 1;
+    for (int row = input_string->row; row < input_string->row_count; row++)
     {
         int row_length = strlen(input_string->array2d[row]);
         for (; col < row_length; col++)
@@ -261,8 +261,8 @@ bool find_next_target(InputString *input_string, bool (*char_matches)(char targe
             if (char_matches(input_string->array2d[row][col]))
             {
                 // Successfully moved to next char
-                input_string->y_position = row;
-                input_string->x_position = col;
+                input_string->row = row;
+                input_string->col = col;
                 return true;
             }
         }
@@ -276,11 +276,11 @@ void LIST(InputString *input_string)
   if (current_position(input_string) == '\'')
     {
         LITERAL(input_string);
-		printf("row %i col %i\n", input_string->y_position, input_string->x_position);
+		printf("row %i col %i\n", input_string->row, input_string->col);
     }
-    else if (is_at_start(input_string->array2d[input_string->y_position], "NIL", input_string->x_position))
+    else if (is_at_start(input_string->array2d[input_string->row], "NIL", input_string->col))
     {
-        input_string->x_position += strlen("NIL");
+        input_string->col += strlen("NIL");
     }
     else if (current_position(input_string) == OPEN_BRACKET)
     {
@@ -291,20 +291,20 @@ void LIST(InputString *input_string)
         }
         else
         {
-            printf("Expected a CAR, CONS or CDR? at row %i col %i\n", input_string->y_position, input_string->x_position);
+            printf("Expected a CAR, CONS or CDR? at row %i col %i\n", input_string->row, input_string->col);
             exit(EXIT_FAILURE);
         }
 
         if (current_position(input_string) != CLOSE_BRACKET)
         {
-            printf("Expected a ')' at row %i col %i \n", input_string->y_position, input_string->x_position);
+            printf("Expected a ')' at row %i col %i \n", input_string->row, input_string->col);
             exit(EXIT_FAILURE);
         }
         move_next_char(input_string);
     }
     else
     {
-        printf("Expected a LITERAL, 'NIL' or '(' at row %i, col %i", input_string->y_position, input_string->x_position);
+        printf("Expected a LITERAL, 'NIL' or '(' at row %i, col %i", input_string->row, input_string->col);
         exit(EXIT_FAILURE);
     }
 }
@@ -318,11 +318,11 @@ void LITERAL(InputString *input_string)
     }
     if (!get_next_quote(input_string))
     {
-        printf("Unmatched quote at row %i col %i", input_string->y_position, input_string->x_position);
+        printf("Unmatched quote at row %i col %i", input_string->row, input_string->col);
         exit(EXIT_FAILURE);
     }
 	move_next_char(input_string);
-    printf("Closing quote at line %i col %i \n ", input_string->y_position, input_string->x_position);
+    printf("Closing quote at line %i col %i \n ", input_string->row, input_string->col);
 }
 
 void test(void)
@@ -349,16 +349,16 @@ void test(void)
 
     test_input_string->row_count = 5;
     assert(end_of_file_reached(test_input_string) == false);
-    test_input_string->y_position = 4;
-    test_input_string->x_position = strlen(test_input_string->array2d[4]) - 1;
+    test_input_string->row = 4;
+    test_input_string->col = strlen(test_input_string->array2d[4]) - 1;
     assert(end_of_file_reached(test_input_string) == true);
-    test_input_string->y_position = 2;
-    test_input_string->x_position = 2;
+    test_input_string->row = 2;
+    test_input_string->col = 2;
 
-    assert(test_input_string->array2d[test_input_string->y_position][test_input_string->x_position] == '+');
+    assert(test_input_string->array2d[test_input_string->row][test_input_string->col] == '+');
 
     assert(get_next_char(test_input_string));
-    assert(test_input_string->y_position == 3);
-    assert(test_input_string->x_position == 0);
+    assert(test_input_string->row == 3);
+    assert(test_input_string->col == 0);
     (move_next_char(test_input_string));
 }
