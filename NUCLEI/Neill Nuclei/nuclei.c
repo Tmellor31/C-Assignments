@@ -4,6 +4,9 @@ void PROG(InputString *input_string);
 void INSTRCTS(InputString *input_string);
 void INSTRCT(InputString *input_string);
 bool LISTFUNC(InputString *input_string);
+void CAR(InputString *input_string);
+void CDR(InputString *input_string);
+void CONS(InputString *input_string);
 bool IOFUNC(InputString *input_string);
 Var *LIST(InputString *input_string);
 char VAR(InputString *input_string);
@@ -29,7 +32,12 @@ int main(int argc, char *argv[])
 {
     test();
     InputString *primary_input_string = make_input_string();
-
+    
+    if (argc <= 1)
+    {
+       printf("Please enter a file\n");
+       exit(EXIT_FAILURE);
+    }
     FILE *fp = fopen(argv[argc - 1], "r");
     if (fp == NULL)
     {
@@ -217,13 +225,35 @@ void PRINT(InputString *input_string)
     input_string->col += strlen("PRINT");
     move_next_char(input_string);
     char letter = VAR(input_string);
-    void *value = find_variable(input_string, letter);
+    Var *value = find_variable(input_string, letter);
     if (value == NULL)
     {
         printf("variable %c is undefined", letter);
         exit(EXIT_FAILURE);
     }
-    printf("%c", value);
+
+    if (value->variabletype == Digit)
+    {
+        printf("%i\n", value->digit);
+    }
+    else if (value->variabletype == List)
+    {
+        printf("(");
+        for (int i = 0; i < value->list_count; i++)
+        {
+            printf("%i ", value->list[i]);
+            if (i == value->list_count - 1)
+            {
+                printf(" ");
+            }
+        }
+        printf(")");
+    }
+    else
+    {
+        printf("Unexpected variable type in PRINT\n");
+        exit(EXIT_FAILURE);
+    }
 }
 
 Var *find_variable(InputString *input_string, char letter)
@@ -372,6 +402,7 @@ Var *LIST(InputString *input_string)
         printf("Expected a LITERAL, 'NIL' or '(' at row %i, col %i", input_string->row, input_string->col);
         exit(EXIT_FAILURE);
     }
+    return 0;
 }
 
 Var *LITERAL(InputString *input_string)
@@ -452,7 +483,7 @@ void test(void)
 
     strcpy(test_input_string->array2d[0], "Java");
     strcpy(test_input_string->array2d[1], "Python");
-    strcpy(test_input_string->array2d[2], "C++  ");
+    strcpy(test_input_string->array2d[2], "C++' ");
     strcpy(test_input_string->array2d[3], "Coffee");
     strcpy(test_input_string->array2d[4], "Silver");
 
@@ -462,12 +493,20 @@ void test(void)
     test_input_string->col = strlen(test_input_string->array2d[4]) - 1;
     assert(end_of_file_reached(test_input_string) == true);
     test_input_string->row = 2;
-    test_input_string->col = 2;
+    test_input_string->col = 3;
 
-    assert(test_input_string->array2d[test_input_string->row][test_input_string->col] == '+');
+    assert(test_input_string->array2d[test_input_string->row][test_input_string->col] == '\'');
 
     assert(get_next_char(test_input_string));
     assert(test_input_string->row == 3);
     assert(test_input_string->col == 0);
     (move_next_char(test_input_string));
+    assert(test_input_string->row == 3);
+    assert(test_input_string->col == 1);
+    test_input_string->row = 2; 
+    assert(current_position(test_input_string) == '+');
+    assert(is_quote('\'') == true);
+    assert(is_quote('X') == false);
+    find_next_target(test_input_string, &is_quote);
+    assert(current_position(test_input_string) == '\'');
 }
