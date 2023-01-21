@@ -5,11 +5,16 @@ void INSTRCTS(InputString *input_string);
 void INSTRCT(InputString *input_string);
 bool LISTFUNC(InputString *input_string);
 bool IOFUNC(InputString *input_string);
-void LIST(InputString *input_string);
-void VAR(InputString *input_string);
+void *LIST(InputString *input_string);
+char VAR(InputString *input_string);
 void LITERAL(InputString *input_string);
-int currentx_position(InputString *input_string);
+void SET(InputString *input_string);
+void add_variable(InputString *input_string, char letter, void *list);
+void PRINT(InputString *input_string);
+void *find_variable(InputString *input_string, char letter);
+InputString *make_input_string(void);
 bool is_at_start(char *inputstring, char *keyword, int inputposition);
+char current_position(InputString *input_string);
 bool end_of_file_reached(InputString *input_string);
 bool is_char(char target);
 bool get_next_char(InputString *input_string);
@@ -21,7 +26,7 @@ void test(void);
 int main(int argc, char *argv[])
 {
     test();
-    InputString *primary_input_string = ncalloc(1, sizeof(InputString));
+    InputString *primary_input_string = make_input_string();
 
     FILE *fp = fopen(argv[argc - 1], "r");
     if (fp == NULL)
@@ -40,8 +45,8 @@ int main(int argc, char *argv[])
         primary_input_string->row_count++;
     }
     fclose(fp);
-	PROG(primary_input_string);
-    InputString *main_input_string = ncalloc(1, sizeof(InputString));
+    PROG(primary_input_string);
+    InputString *main_input_string = make_input_string();
     strcpy(main_input_string->array2d[main_input_string->row_count++], "(");
     strcpy(main_input_string->array2d[main_input_string->row_count++], " ( CAR '2' ) ");
     strcpy(main_input_string->array2d[main_input_string->row_count++], " (SET B '(1 2 3)' )");
@@ -49,12 +54,19 @@ int main(int argc, char *argv[])
     strcpy(main_input_string->array2d[main_input_string->row_count++], ")");
     PROG(main_input_string);
 
-	free(primary_input_string);
+    free(primary_input_string);
     free(main_input_string);
 
-	return 0;
+    return 0;
 }
 
+InputString *make_input_string(void)
+{
+    InputString *input_string = ncalloc(1, sizeof(InputString));
+    input_string->row_count = 0;
+    input_string->variable_count = 0;
+    return input_string;
+}
 char current_position(InputString *input_string)
 {
     return input_string->array2d[input_string->row][input_string->col];
@@ -74,16 +86,16 @@ void PROG(InputString *input_string)
 
 void INSTRCTS(InputString *input_string)
 {
-  if (current_position(input_string) == CLOSE_BRACKET)
-	{
-	  printf("Close bracket for INSTRUCTS found");
-	  get_next_char(input_string);
-	  return;        
+    if (current_position(input_string) == CLOSE_BRACKET)
+    {
+        printf("Close bracket for INSTRUCTS found");
+        get_next_char(input_string);
+        return;
     }
-  INSTRCT(input_string);
-  INSTRCTS(input_string);
-  printf("Completed loop\n");
-  printf("Position is row %i col %i\n", input_string->row, input_string->col);
+    INSTRCT(input_string);
+    INSTRCTS(input_string);
+    printf("Completed loop\n");
+    printf("Position is row %i col %i\n", input_string->row, input_string->col);
 }
 
 void INSTRCT(InputString *input_string)
@@ -105,11 +117,11 @@ void INSTRCT(InputString *input_string)
 
     if (current_position(input_string) != CLOSE_BRACKET)
     {
-	  printf("Expected an ')' at row %i col %i. Received '%c' \n", input_string->row, input_string->col, current_position(input_string));
+        printf("Expected an ')' at row %i col %i. Received '%c' \n", input_string->row, input_string->col, current_position(input_string));
         exit(EXIT_FAILURE);
     }
-	printf("Closing bracket for INSTRUCT at line %i col %i\n", input_string->row, input_string->col);
-	move_next_char(input_string);
+    printf("Closing bracket for INSTRUCT at line %i col %i\n", input_string->row, input_string->col);
+    move_next_char(input_string);
 }
 
 bool LISTFUNC(InputString *input_string)
@@ -117,12 +129,12 @@ bool LISTFUNC(InputString *input_string)
     if (is_at_start(input_string->array2d[input_string->row], "CAR", input_string->col))
     {
         input_string->col += strlen("CAR");
-		get_next_char(input_string);
+        get_next_char(input_string);
         LIST(input_string);
-		printf("LIST ended at line %i col %i. Current position: '%c'\n",
-			   input_string->row,
-			   input_string->col,
-			   current_position(input_string));
+        printf("LIST ended at line %i col %i. Current position: '%c'\n",
+               input_string->row,
+               input_string->col,
+               current_position(input_string));
         return true;
     }
     else if (is_at_start(input_string->array2d[input_string->row], "CDR", input_string->col))
@@ -149,21 +161,15 @@ bool LISTFUNC(InputString *input_string)
 
 bool IOFUNC(InputString *input_string)
 {
-  if (is_at_start(input_string->array2d[input_string->row], "SET", input_string->col))
+    if (is_at_start(input_string->array2d[input_string->row], "SET", input_string->col))
     {
-        input_string->col += strlen("SET");
-		move_next_char(input_string);
-        VAR(input_string);
-        LIST(input_string);
+        SET(input_string);
         return true;
     }
 
     else if (is_at_start(input_string->array2d[input_string->row], "PRINT", input_string->col))
     {
-        printf("PRINT\n");
-        input_string->col += strlen("PRINT");
-        move_next_char(input_string);
-        VAR(input_string);
+        PRINT(input_string);
         return true;
     }
 
@@ -174,13 +180,58 @@ bool IOFUNC(InputString *input_string)
     }
 }
 
-void VAR(InputString *input_string)
+void SET(InputString *input_string)
+{
+    input_string->col += strlen("SET");
+    move_next_char(input_string);
+    char letter = VAR(input_string);
+    void *list = LIST(input_string);
+    add_variable(input_string, letter, list);
+}
+
+void add_variable(InputString *input_string, char letter, void *list)
+{
+    input_string->variables[input_string->variable_count].var = letter;
+    input_string->variables[input_string->variable_count].value = list;
+    input_string->variable_count++;
+}
+
+void PRINT(InputString *input_string)
+{
+    printf("PRINT\n");
+    input_string->col += strlen("PRINT");
+    move_next_char(input_string);
+    char letter = VAR(input_string);
+    void *value = find_variable(input_string, letter);
+    if (value == NULL)
+    {
+        printf("variable %c is undefined", letter); 
+        exit(EXIT_FAILURE); 
+    }
+    printf("%c", value); 
+}
+
+void *find_variable(InputString *input_string, char letter)
+{
+    for (int i = 0; i < input_string->variable_count; i++)
+    {
+        if (letter == input_string->variables[i].var)
+        {
+            return input_string->variables[i].value;
+        }
+    }
+    return NULL;
+}
+
+char VAR(InputString *input_string)
 {
     if (current_position(input_string) >= 'A' &&
         current_position(input_string) <= 'Z')
     {
-        move_next_char(input_string); 
+        char letter = current_position(input_string);
+        move_next_char(input_string);
         printf("row %i col %i\n", input_string->row, input_string->col);
+        return letter;
     }
     else
     {
@@ -270,12 +321,12 @@ bool find_next_target(InputString *input_string, bool (*char_matches)(char targe
     return false;
 }
 
-void LIST(InputString *input_string)
+void *LIST(InputString *input_string)
 {
-  if (current_position(input_string) == '\'')
+    if (current_position(input_string) == '\'')
     {
         LITERAL(input_string);
-		printf("row %i col %i\n", input_string->row, input_string->col);
+        printf("row %i col %i\n", input_string->row, input_string->col);
     }
     else if (is_at_start(input_string->array2d[input_string->row], "NIL", input_string->col))
     {
@@ -320,7 +371,7 @@ void LITERAL(InputString *input_string)
         printf("Unmatched quote at row %i col %i", input_string->row, input_string->col);
         exit(EXIT_FAILURE);
     }
-	move_next_char(input_string);
+    move_next_char(input_string);
     printf("Closing quote at line %i col %i \n ", input_string->row, input_string->col);
 }
 
