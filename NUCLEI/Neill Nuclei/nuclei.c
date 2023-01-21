@@ -14,9 +14,9 @@ lisp *LITERAL(InputString *input_string);
 Var *literal_list(InputString *input_string);
 Var *literal_digit(InputString *input_string);
 void SET(InputString *input_string);
-void add_variable(InputString *input_string, char letter, Var *var);
+void add_variable(InputString *input_string, char letter, lisp *var);
 void PRINT(InputString *input_string);
-Var *find_variable(InputString *input_string, char letter);
+lisp *find_variable(InputString *input_string, char letter);
 InputString *make_input_string(void);
 bool is_at_start(char *inputstring, char *keyword, int inputposition);
 char current_position(InputString *input_string);
@@ -170,6 +170,8 @@ lisp *CDR(InputString *input_string)
     input_string->col += strlen("CDR");
     get_next_char(input_string);
     lisp *list_value = LIST(input_string);
+    char teststr[50] = "";
+    lisp_tostring(lisp_cdr(list_value),teststr); 
     return lisp_cdr(list_value);
 }
 
@@ -208,14 +210,14 @@ void SET(InputString *input_string)
     input_string->col += strlen("SET");
     move_next_char(input_string);
     char letter = VAR(input_string);
-    Var *list = LIST(input_string);
+    lisp *list = LIST(input_string);
     add_variable(input_string, letter, list);
 }
 
-void add_variable(InputString *input_string, char letter, Var *var)
+void add_variable(InputString *input_string, char letter, lisp *var)
 {
-    input_string->variables[input_string->variable_count] = var;
-    input_string->variables[input_string->variable_count]->name = letter;
+    input_string->variables[input_string->variable_count].value = var;
+    input_string->variables[input_string->variable_count].name = letter;
     input_string->variable_count++;
 }
 
@@ -224,24 +226,24 @@ void PRINT(InputString *input_string)
     input_string->col += strlen("PRINT");
     move_next_char(input_string);
     char letter = VAR(input_string);
-    Var *value = find_variable(input_string, letter);
+    lisp *value = find_variable(input_string, letter);
     if (value == NULL)
     {
         printf("variable %c is undefined", letter);
         exit(EXIT_FAILURE);
     }
-    char *print_string;
-    lisp_tostring(value->value, print_string);
+    char print_string[MAXLINEWIDTH] = "";
+    lisp_tostring(value, print_string);
     puts(print_string);
 }
 
-Var *find_variable(InputString *input_string, char letter)
-{
+lisp *find_variable(InputString *input_string, char letter)
+{ 
     for (int i = 0; i < input_string->variable_count; i++)
     {
-        if (letter == input_string->variables[i]->name)
+        if (letter == input_string->variables[i].name)
         {
-            return input_string->variables[i];
+            return input_string->variables[i].value;
         }
     }
     return NULL;
@@ -390,18 +392,27 @@ lisp *LITERAL(InputString *input_string)
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
-    lisp *literal = literal_list(input_string);
-    if (!get_next_quote(input_string))
+    char literalstring[MAXLINEWIDTH] = "";
+    int counter = 0;
+    do
+    {
+        literalstring[counter++] = current_position(input_string);
+        input_string->col++; 
+    } while (!is_quote(current_position(input_string)));
+    literalstring[counter] = NUM;
+    lisp *literal_value = lisp_fromstring(literalstring);
+
+    /*if (!get_next_quote(input_string))
     {
         printf("Unmatched quote at row %i col %i", input_string->row, input_string->col);
         exit(EXIT_FAILURE);
-    }
+    }*/
     move_next_char(input_string);
 
-    return literal;
+    return literal_value;
 }
 
-Var *literal_list(InputString *input_string)
+/*lisp *literal_list(InputString *input_string)
 {
     lisp *list = ncalloc(1, sizeof(Var));
     char current_char;
@@ -413,14 +424,13 @@ Var *literal_list(InputString *input_string)
         if (current_char != CLOSE_BRACKET)
         {
             lisp *atom = lisp_atom(current_char - '0');
-            lisp_cons(atom,NULL); 
-            list->car; 
-            
+            lisp_cons(atom, NULL);
+            list->car;
         }
     } while (current_char != CLOSE_BRACKET);
 
     return list;
-}
+}*/
 
 void test(void)
 {

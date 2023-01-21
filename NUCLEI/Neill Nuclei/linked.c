@@ -1,5 +1,8 @@
 #include "specific.h"
 
+#define NIL NULL 
+#define BIGSTR 50 
+
 // Non-extension code works and has no mem leaks when I run it. I've attempted to write lisp_reduce, but can't test it aganist testlisp.c -
 // - as that requires the from string function which I haven't done.
 
@@ -7,6 +10,12 @@ void cons_tostring(const lisp *l, char *str);
 void list_tostring(const lisp *l, char *str);
 void new_times(lisp* l, atomtype* n);
 void new_atoms(lisp* l, atomtype* n);
+lisp* lisp_fromstring(const char* str);
+bool check_bracks(const char* str);
+bool check_chars(const char* str);
+lisp* from(int s, const info i[]); 
+void get_str_info(const char* str, info i[]);
+int endbrack(int s, const info i[]);
 
 
 lisp *lisp_atom(const atomtype a)
@@ -231,12 +240,127 @@ void new_atoms(lisp* l, atomtype* accum)
 
 /* ------------- Tougher Ones : Extensions ---------------*/
 
-// Builds a new list based on the string 'str'
-lisp *lisp_fromstring(const char *str)
-{
-    (void)str;
-    return lisp_atom(3);
+//TAKEN FROM JAKE AS PER KIRAS COMMENT ON MICROSOFT TEAMS SAYING WE CAN
+//BORROW CODE FROM PREVIOUS EXTENSIONS
+lisp* lisp_fromstring(const char* str){
+    //these checks are not comprehensive, but help prevent seg faults
+    if(!check_bracks(str) || !check_chars(str) || strcmp(str,"") == 0){
+        fprintf(stderr, "Bad input string: '%s'\n", str);
+        return NIL;
+    }
+
+    info i[BIGSTR];
+    get_str_info(str, i);
+
+    if(i[0].t == NUM){
+        return atom(i[0].a);
+    }
+
+    return from(1,i);
 }
+
+
+bool check_bracks(const char* str){
+    //+1 when we open a bracket, -1 when we subsequently close it
+    int brackets = 0;
+    for(int i=0; i< (int) strlen(str); i++){
+        //brackets<0 implies erroneous close bracket, ie ( () )( ) would be invalid
+        if(brackets < 0){
+            return false;
+        }
+        if(str[i] == '('){
+            brackets++;
+        }
+        if(str[i] == ')'){
+            brackets--;
+        }
+    }
+    if(brackets != 0){
+        return false;
+    }
+    return true;
+}
+
+
+bool check_chars(const char* str){
+    for(int i=0; i< (int) strlen(str); i++){
+        //chars must be space, ( , ) , - , or digits
+        if(str[i] != ')' && str[i] != '(' && str[i] != ' ' && str[i] != '-'){
+            if(str[i] > '9' || str[i] < '0'){
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+
+lisp* from(int s, const info i[]){
+
+    if(i[s].t == '('){
+        //everything within a bracketed expression becomes the car. everything after becomes the cdr.
+        return cons( from(s+1, i) , from(endbrack(s,i), i) );
+    }
+
+    else if(i[s].t == NUM){
+        return cons( atom(i[s].a) , from(s+1, i) );
+    }
+
+    else{
+        return NIL;
+    }
+}
+
+
+int endbrack(int s, const info i[]){
+    int x=1;
+    while(x != 0){
+        s++;
+        if(i[s].t == '('){
+            x++;
+        }
+        if(i[s].t == ')'){
+            x--;
+        }
+    }
+    return s+1;
+}
+
+
+void get_str_info(const char* str, info i[]){
+    int j=0;
+    info addinfo = {'(',0};
+
+    for(int k=0; k < (int) strlen(str); k++){
+        if(str[k] == '('){
+            addinfo.t = '(';
+            i[j] = addinfo;
+            j++;
+        }
+        else if(str[k] == ')'){
+            addinfo.t = ')';
+            i[j] = addinfo;
+            j++;
+        }
+        else if(str[k] == ' '){
+            //ignore spaces
+        }
+        else{
+            sscanf(&str[k], "%d", &addinfo.a);
+            addinfo.t = NUM;
+            i[j] = addinfo;
+            j++;
+            //cycle to end of num (could be multiple digits)
+            while((str[k] >= '0' && str[k] <= '9') || str[k] == '-'){
+                k++;
+            }
+            k--;
+        }
+    }
+
+    return;
+}
+
 
 // Returns a new list from a set of existing lists.
 // A variable number 'n' lists are used.
