@@ -93,7 +93,6 @@ void PROG(InputString *input_string)
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
-    printf("After moving at start of next loop position is row %i col %i\n", input_string->row, input_string->col);
     INSTRCTS(input_string);
 }
 
@@ -101,14 +100,11 @@ void INSTRCTS(InputString *input_string)
 {
     if (current_position(input_string) == CLOSE_BRACKET)
     {
-        printf("Close bracket for INSTRUCTS found");
         get_next_char(input_string);
         return;
     }
     INSTRCT(input_string);
     INSTRCTS(input_string);
-    printf("Completed loop\n");
-    printf("Position is row %i col %i\n", input_string->row, input_string->col);
 }
 
 void INSTRCT(InputString *input_string)
@@ -133,7 +129,6 @@ void INSTRCT(InputString *input_string)
         printf("Expected an ')' at row %i col %i. Received '%c' \n", input_string->row, input_string->col, current_position(input_string));
         exit(EXIT_FAILURE);
     }
-    printf("Closing bracket for INSTRUCT at line %i col %i\n", input_string->row, input_string->col);
     move_next_char(input_string);
 }
 
@@ -221,7 +216,6 @@ void add_variable(InputString *input_string, char letter, Var *var)
 
 void PRINT(InputString *input_string)
 {
-    printf("PRINT\n");
     input_string->col += strlen("PRINT");
     move_next_char(input_string);
     char letter = VAR(input_string);
@@ -241,8 +235,8 @@ void PRINT(InputString *input_string)
         printf("(");
         for (int i = 0; i < value->list_count; i++)
         {
-            printf("%i ", value->list[i]);
-            if (i == value->list_count - 1)
+            printf("%i", value->list[i]);
+            if (i != value->list_count - 1)
             {
                 printf(" ");
             }
@@ -275,7 +269,6 @@ char VAR(InputString *input_string)
     {
         char letter = current_position(input_string);
         move_next_char(input_string);
-        printf("row %i col %i\n", input_string->row, input_string->col);
         return letter;
     }
     else
@@ -382,7 +375,6 @@ Var *LIST(InputString *input_string)
         move_next_char(input_string);
         if (LISTFUNC(input_string))
         {
-            printf("%c", current_position(input_string));
         }
         else
         {
