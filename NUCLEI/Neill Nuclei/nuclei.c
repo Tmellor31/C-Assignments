@@ -3,14 +3,14 @@
 void PROG(InputString *input_string);
 void INSTRCTS(InputString *input_string);
 void INSTRCT(InputString *input_string);
-bool LISTFUNC(Var *new_variable,InputString *input_string);
-Var *CAR(InputString *input_string);
-Var *CDR(InputString *input_string);
-Var *CONS(InputString *input_string);
+bool LISTFUNC(lisp **new_variable, InputString *input_string);
+lisp *CAR(InputString *input_string);
+lisp *CDR(InputString *input_string);
+lisp *CONS(InputString *input_string);
 bool IOFUNC(InputString *input_string);
-Var *LIST(InputString *input_string);
+lisp *LIST(InputString *input_string);
 char VAR(InputString *input_string);
-Var *LITERAL(InputString *input_string);
+lisp *LITERAL(InputString *input_string);
 Var *literal_list(InputString *input_string);
 Var *literal_digit(InputString *input_string);
 void SET(InputString *input_string);
@@ -32,11 +32,11 @@ int main(int argc, char *argv[])
 {
     test();
     InputString *primary_input_string = make_input_string();
-    
+
     if (argc <= 1)
     {
-       printf("Please enter a file\n");
-       exit(EXIT_FAILURE);
+        printf("Please enter a file\n");
+        exit(EXIT_FAILURE);
     }
     FILE *fp = fopen(argv[argc - 1], "r");
     if (fp == NULL)
@@ -116,7 +116,8 @@ void INSTRCT(InputString *input_string)
     }
     move_next_char(input_string);
     bool haspassed = false;
-    haspassed = LISTFUNC(input_string) || IOFUNC(input_string);
+    lisp *var = NULL;
+    haspassed = LISTFUNC(&var, input_string) || IOFUNC(input_string);
 
     if (!haspassed)
     {
@@ -132,53 +133,53 @@ void INSTRCT(InputString *input_string)
     move_next_char(input_string);
 }
 
-bool LISTFUNC(Var *new_variable,InputString *input_string)
+bool LISTFUNC(lisp **new_variable, InputString *input_string)
 {
     if (is_at_start(input_string->array2d[input_string->row], "CAR", input_string->col))
     {
-        new_variable = CAR(input_string);
+        *new_variable = CAR(input_string);
         return true;
     }
     else if (is_at_start(input_string->array2d[input_string->row], "CDR", input_string->col))
     {
-        new_variable = CDR(input_string);
+        *new_variable = CDR(input_string);
         return true;
     }
     else if (is_at_start(input_string->array2d[input_string->row], "CONS", input_string->col))
     {
-        new_variable = CONS(input_string);
+        *new_variable = CONS(input_string);
         return true;
     }
     else
     {
         // No CAR,CDR or CONS found
+        *new_variable = NULL;
         return false;
     }
 }
-Var *CAR(InputString *input_string)
+lisp *CAR(InputString *input_string)
 {
     input_string->col += strlen("CAR");
     get_next_char(input_string);
-    Var *list_value = LIST(input_string);
-    if (list_value->variabletype == Digit)
-    {
-        printf("")
-    }
+    lisp *list_value = LIST(input_string);
+    return lisp_car(list_value);
 }
 
-Var *CDR(InputString *input_string)
+lisp *CDR(InputString *input_string)
 {
     input_string->col += strlen("CDR");
     get_next_char(input_string);
-    Var *list_value = LIST(input_string);
+    lisp *list_value = LIST(input_string);
+    return lisp_cdr(list_value);
 }
 
-Var *CONS(InputString *input_string)
+lisp *CONS(InputString *input_string)
 {
     input_string->col += strlen("CONS");
     get_next_char(input_string);
-    LIST(input_string);
-    LIST(input_string);
+    lisp *firstlist = LIST(input_string);
+    lisp *secondlist = LIST(input_string);
+    return lisp_cons(firstlist, secondlist);
 }
 
 bool IOFUNC(InputString *input_string)
@@ -207,7 +208,7 @@ void SET(InputString *input_string)
     input_string->col += strlen("SET");
     move_next_char(input_string);
     char letter = VAR(input_string);
-    void *list = LIST(input_string);
+    Var *list = LIST(input_string);
     add_variable(input_string, letter, list);
 }
 
@@ -229,29 +230,9 @@ void PRINT(InputString *input_string)
         printf("variable %c is undefined", letter);
         exit(EXIT_FAILURE);
     }
-
-    if (value->variabletype == Digit)
-    {
-        printf("%i\n", value->digit);
-    }
-    else if (value->variabletype == List)
-    {
-        printf("(");
-        for (int i = 0; i < value->list_count; i++)
-        {
-            printf("%i", value->list[i]);
-            if (i != value->list_count - 1)
-            {
-                printf(" ");
-            }
-        }
-        printf(")");
-    }
-    else
-    {
-        printf("Unexpected variable type in PRINT\n");
-        exit(EXIT_FAILURE);
-    }
+    char *print_string;
+    lisp_tostring(value->value, print_string);
+    puts(print_string);
 }
 
 Var *find_variable(InputString *input_string, char letter)
@@ -363,7 +344,7 @@ bool find_next_target(InputString *input_string, bool (*char_matches)(char targe
     return false;
 }
 
-Var *LIST(InputString *input_string)
+lisp *LIST(InputString *input_string)
 {
     if (current_position(input_string) == '\'')
     {
@@ -376,11 +357,10 @@ Var *LIST(InputString *input_string)
     }
     else if (current_position(input_string) == OPEN_BRACKET)
     {
+        lisp *list_value = NULL;
         move_next_char(input_string);
-        if (LISTFUNC(input_string))
-        {
-        }
-        else
+
+        if (!LISTFUNC(&list_value, input_string))
         {
             printf("Expected a CAR, CONS or CDR? at row %i col %i\n", input_string->row, input_string->col);
             exit(EXIT_FAILURE);
@@ -392,15 +372,17 @@ Var *LIST(InputString *input_string)
             exit(EXIT_FAILURE);
         }
         move_next_char(input_string);
+        return list_value;
     }
     else
     {
         printf("Expected a LITERAL, 'NIL' or '(' at row %i, col %i", input_string->row, input_string->col);
         exit(EXIT_FAILURE);
     }
+    return 0;
 }
 
-Var *LITERAL(InputString *input_string)
+lisp *LITERAL(InputString *input_string)
 {
     if (current_position(input_string) != '\'')
     {
@@ -408,20 +390,7 @@ Var *LITERAL(InputString *input_string)
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
-    Var *literal;
-    if (current_position(input_string) == OPEN_BRACKET)
-    {
-        literal = literal_list(input_string);
-    }
-    else if (isdigit(current_position(input_string)))
-    {
-        literal = literal_digit(input_string);
-    }
-    else
-    {
-        printf("Expected digit or list inside literal at position row %i col %i", input_string->row, input_string->col);
-        exit(EXIT_FAILURE);
-    }
+    lisp *literal = literal_list(input_string);
     if (!get_next_quote(input_string))
     {
         printf("Unmatched quote at row %i col %i", input_string->row, input_string->col);
@@ -434,30 +403,23 @@ Var *LITERAL(InputString *input_string)
 
 Var *literal_list(InputString *input_string)
 {
-    Var *list = ncalloc(1, sizeof(Var));
+    lisp *list = ncalloc(1, sizeof(Var));
     char current_char;
-    list->variabletype = List;
+
     do
     {
         move_next_char(input_string);
         current_char = current_position(input_string);
         if (current_char != CLOSE_BRACKET)
         {
-            list->list[list->list_count] = current_char - '0';
-            list->list_count++;
+            lisp *atom = lisp_atom(current_char - '0');
+            lisp_cons(atom,NULL); 
+            list->car; 
+            
         }
     } while (current_char != CLOSE_BRACKET);
 
     return list;
-}
-
-Var *literal_digit(InputString *input_string)
-{
-    Var *digit = ncalloc(1, sizeof(Var));
-    digit->digit = current_position(input_string) - '0';
-    digit->variabletype = Digit;
-    digit->list_count = 0;
-    return digit;
 }
 
 void test(void)
@@ -498,7 +460,7 @@ void test(void)
     (move_next_char(test_input_string));
     assert(test_input_string->row == 3);
     assert(test_input_string->col == 1);
-    test_input_string->row = 2; 
+    test_input_string->row = 2;
     assert(current_position(test_input_string) == '+');
     assert(is_quote('\'') == true);
     assert(is_quote('X') == false);

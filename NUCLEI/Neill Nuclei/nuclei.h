@@ -5,6 +5,7 @@
 #include <math.h>
 #include <ctype.h>
 #include "general.h"
+#include "specific.h"
 #define MAXLINENO 50
 #define MAXLINEWIDTH 50
 #define MAXVARIABLES 50
@@ -15,19 +16,10 @@
 #define CLOSE_BRACKET ')'
 #define COMMENT '#'
 
-typedef enum VariableType
-{
-    List,
-    Digit
-} VariableType;
-
 typedef struct Var
 {
-    VariableType variabletype;
+    lisp *value; 
     char name;
-    int digit;
-    int list[MAXLISTSIZE];
-    int list_count; 
 } Var;
 
 typedef struct InputString
