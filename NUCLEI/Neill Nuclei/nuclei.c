@@ -3,10 +3,10 @@
 void PROG(InputString *input_string);
 void INSTRCTS(InputString *input_string);
 void INSTRCT(InputString *input_string);
-bool LISTFUNC(InputString *input_string);
-void CAR(InputString *input_string);
-void CDR(InputString *input_string);
-void CONS(InputString *input_string);
+bool LISTFUNC(Var *new_variable,InputString *input_string);
+Var *CAR(InputString *input_string);
+Var *CDR(InputString *input_string);
+Var *CONS(InputString *input_string);
 bool IOFUNC(InputString *input_string);
 Var *LIST(InputString *input_string);
 char VAR(InputString *input_string);
@@ -132,21 +132,21 @@ void INSTRCT(InputString *input_string)
     move_next_char(input_string);
 }
 
-bool LISTFUNC(InputString *input_string)
+bool LISTFUNC(Var *new_variable,InputString *input_string)
 {
     if (is_at_start(input_string->array2d[input_string->row], "CAR", input_string->col))
     {
-        CAR(input_string);
+        new_variable = CAR(input_string);
         return true;
     }
     else if (is_at_start(input_string->array2d[input_string->row], "CDR", input_string->col))
     {
-        CDR(input_string);
+        new_variable = CDR(input_string);
         return true;
     }
     else if (is_at_start(input_string->array2d[input_string->row], "CONS", input_string->col))
     {
-        CONS(input_string);
+        new_variable = CONS(input_string);
         return true;
     }
     else
@@ -155,21 +155,25 @@ bool LISTFUNC(InputString *input_string)
         return false;
     }
 }
-void CAR(InputString *input_string)
+Var *CAR(InputString *input_string)
 {
     input_string->col += strlen("CAR");
     get_next_char(input_string);
-    LIST(input_string);
+    Var *list_value = LIST(input_string);
+    if (list_value->variabletype == Digit)
+    {
+        printf("")
+    }
 }
 
-void CDR(InputString *input_string)
+Var *CDR(InputString *input_string)
 {
     input_string->col += strlen("CDR");
     get_next_char(input_string);
-    LIST(input_string);
+    Var *list_value = LIST(input_string);
 }
 
-void CONS(InputString *input_string)
+Var *CONS(InputString *input_string)
 {
     input_string->col += strlen("CONS");
     get_next_char(input_string);
@@ -394,7 +398,6 @@ Var *LIST(InputString *input_string)
         printf("Expected a LITERAL, 'NIL' or '(' at row %i, col %i", input_string->row, input_string->col);
         exit(EXIT_FAILURE);
     }
-    return 0;
 }
 
 Var *LITERAL(InputString *input_string)
