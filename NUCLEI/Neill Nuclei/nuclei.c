@@ -11,9 +11,9 @@ Var *LITERAL(InputString *input_string);
 Var *literal_list(InputString *input_string);
 Var *literal_digit(InputString *input_string);
 void SET(InputString *input_string);
-void add_variable(InputString *input_string, char letter, void *list);
+void add_variable(InputString *input_string, char letter, Var *var);
 void PRINT(InputString *input_string);
-void *find_variable(InputString *input_string, char letter);
+Var *find_variable(InputString *input_string, char letter);
 InputString *make_input_string(void);
 bool is_at_start(char *inputstring, char *keyword, int inputposition);
 char current_position(InputString *input_string);
@@ -204,10 +204,10 @@ void SET(InputString *input_string)
     add_variable(input_string, letter, list);
 }
 
-void add_variable(InputString *input_string, char letter, void *list)
+void add_variable(InputString *input_string, char letter, Var *var)
 {
-    input_string->variables[input_string->variable_count].name = letter;
-    input_string->variables[input_string->variable_count].value = list;
+    input_string->variables[input_string->variable_count] = var;
+    input_string->variables[input_string->variable_count]->name = letter;
     input_string->variable_count++;
 }
 
@@ -226,13 +226,13 @@ void PRINT(InputString *input_string)
     printf("%c", value);
 }
 
-void *find_variable(InputString *input_string, char letter)
+Var *find_variable(InputString *input_string, char letter)
 {
     for (int i = 0; i < input_string->variable_count; i++)
     {
-        if (letter == input_string->variables[i].name)
+        if (letter == input_string->variables[i]->name)
         {
-            return input_string->variables[i].value;
+            return input_string->variables[i];
         }
     }
     return NULL;

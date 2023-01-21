@@ -36,6 +36,6 @@ typedef struct InputString
     int row;
     int col;
     int row_count;
-    Var variables[MAXVARIABLES];
+    Var *variables[MAXVARIABLES];
     int variable_count;
 } InputString;
