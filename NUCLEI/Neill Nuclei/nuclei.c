@@ -42,7 +42,10 @@ int main(int argc, char *argv[])
 
     while (fgets(primary_input_string->array2d[primary_input_string->row_count], MAXLINEWIDTH, fp) != NULL)
     {
-        primary_input_string->row_count++;
+        if (primary_input_string->array2d[primary_input_string->row_count][0] != COMMENT)
+        {
+            primary_input_string->row_count++;
+        }
     }
     fclose(fp);
     PROG(primary_input_string);
@@ -133,12 +136,12 @@ bool LISTFUNC(InputString *input_string)
     }
     else if (is_at_start(input_string->array2d[input_string->row], "CDR", input_string->col))
     {
-        CDR(input_string); 
+        CDR(input_string);
         return true;
     }
     else if (is_at_start(input_string->array2d[input_string->row], "CONS", input_string->col))
     {
-        CONS(input_string); 
+        CONS(input_string);
         return true;
     }
     else
@@ -341,6 +344,7 @@ void *LIST(InputString *input_string)
     else if (is_at_start(input_string->array2d[input_string->row], "NIL", input_string->col))
     {
         input_string->col += strlen("NIL");
+        return NULL;
     }
     else if (current_position(input_string) == OPEN_BRACKET)
     {
@@ -376,6 +380,7 @@ void LITERAL(InputString *input_string)
         printf("Expected a single quote at the start of Literal\n");
         exit(EXIT_FAILURE);
     }
+    char literal = current_position(input_string);
     if (!get_next_quote(input_string))
     {
         printf("Unmatched quote at row %i col %i", input_string->row, input_string->col);

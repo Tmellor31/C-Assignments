@@ -12,6 +12,7 @@
 #define NEWLINE '\n'
 #define OPEN_BRACKET '('
 #define CLOSE_BRACKET ')'
+#define COMMENT '#'
 
 typedef struct Var
 {
