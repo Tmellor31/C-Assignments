@@ -10,4 +10,4 @@
 # For the parser, anything in single-quotes is fine - you don't need to "investigate" whether it's valid or not.
 <LITERAL> ::= Single-quoted list e.g. '(1)', '(1 2 3 (4 5))', or '2'
 
-
+Literal can be a list(array) or a number

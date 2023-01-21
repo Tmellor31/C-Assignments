@@ -5,9 +5,11 @@ void INSTRCTS(InputString *input_string);
 void INSTRCT(InputString *input_string);
 bool LISTFUNC(InputString *input_string);
 bool IOFUNC(InputString *input_string);
-void *LIST(InputString *input_string);
+Var *LIST(InputString *input_string);
 char VAR(InputString *input_string);
-void LITERAL(InputString *input_string);
+Var *LITERAL(InputString *input_string);
+Var *literal_list(InputString *input_string);
+Var *literal_digit(InputString *input_string);
 void SET(InputString *input_string);
 void add_variable(InputString *input_string, char letter, void *list);
 void PRINT(InputString *input_string);
@@ -204,7 +206,7 @@ void SET(InputString *input_string)
 
 void add_variable(InputString *input_string, char letter, void *list)
 {
-    input_string->variables[input_string->variable_count].var = letter;
+    input_string->variables[input_string->variable_count].name = letter;
     input_string->variables[input_string->variable_count].value = list;
     input_string->variable_count++;
 }
@@ -228,7 +230,7 @@ void *find_variable(InputString *input_string, char letter)
 {
     for (int i = 0; i < input_string->variable_count; i++)
     {
-        if (letter == input_string->variables[i].var)
+        if (letter == input_string->variables[i].name)
         {
             return input_string->variables[i].value;
         }
@@ -334,12 +336,11 @@ bool find_next_target(InputString *input_string, bool (*char_matches)(char targe
     return false;
 }
 
-void *LIST(InputString *input_string)
+Var *LIST(InputString *input_string)
 {
     if (current_position(input_string) == '\'')
     {
-        LITERAL(input_string);
-        printf("row %i col %i\n", input_string->row, input_string->col);
+        return LITERAL(input_string);
     }
     else if (is_at_start(input_string->array2d[input_string->row], "NIL", input_string->col))
     {
@@ -373,21 +374,64 @@ void *LIST(InputString *input_string)
     }
 }
 
-void LITERAL(InputString *input_string)
+Var *LITERAL(InputString *input_string)
 {
     if (current_position(input_string) != '\'')
     {
         printf("Expected a single quote at the start of Literal\n");
         exit(EXIT_FAILURE);
     }
-    char literal = current_position(input_string);
+    move_next_char(input_string);
+    Var *literal;
+    if (current_position(input_string) == OPEN_BRACKET)
+    {
+        literal = literal_list(input_string);
+    }
+    else if (isdigit(current_position(input_string)))
+    {
+        literal = literal_digit(input_string);
+    }
+    else
+    {
+        printf("Expected digit or list inside literal at position row %i col %i", input_string->row, input_string->col);
+        exit(EXIT_FAILURE);
+    }
     if (!get_next_quote(input_string))
     {
         printf("Unmatched quote at row %i col %i", input_string->row, input_string->col);
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
-    printf("Closing quote at line %i col %i \n ", input_string->row, input_string->col);
+
+    return literal;
+}
+
+Var *literal_list(InputString *input_string)
+{
+    Var *list = ncalloc(1, sizeof(Var));
+    char current_char;
+    list->variabletype = List;
+    do
+    {
+        move_next_char(input_string);
+        current_char = current_position(input_string);
+        if (current_char != CLOSE_BRACKET)
+        {
+            list->list[list->list_count] = current_char - '0';
+            list->list_count++;
+        }
+    } while (current_char != CLOSE_BRACKET);
+
+    return list;
+}
+
+Var *literal_digit(InputString *input_string)
+{
+    Var *digit = ncalloc(1, sizeof(Var));
+    digit->digit = current_position(input_string) - '0';
+    digit->variabletype = Digit;
+    digit->list_count = 0;
+    return digit;
 }
 
 void test(void)
