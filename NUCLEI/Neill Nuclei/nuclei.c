@@ -128,28 +128,17 @@ bool LISTFUNC(InputString *input_string)
 {
     if (is_at_start(input_string->array2d[input_string->row], "CAR", input_string->col))
     {
-        input_string->col += strlen("CAR");
-        get_next_char(input_string);
-        LIST(input_string);
-        printf("LIST ended at line %i col %i. Current position: '%c'\n",
-               input_string->row,
-               input_string->col,
-               current_position(input_string));
+        CAR(input_string);
         return true;
     }
     else if (is_at_start(input_string->array2d[input_string->row], "CDR", input_string->col))
     {
-        input_string->col += strlen("CDR");
-        get_next_char(input_string);
-        LIST(input_string);
+        CDR(input_string); 
         return true;
     }
     else if (is_at_start(input_string->array2d[input_string->row], "CONS", input_string->col))
     {
-        input_string->col += strlen("CONS");
-        get_next_char(input_string);
-        LIST(input_string);
-        LIST(input_string);
+        CONS(input_string); 
         return true;
     }
     else
@@ -157,6 +146,27 @@ bool LISTFUNC(InputString *input_string)
         // No CAR,CDR or CONS found
         return false;
     }
+}
+void CAR(InputString *input_string)
+{
+    input_string->col += strlen("CAR");
+    get_next_char(input_string);
+    LIST(input_string);
+}
+
+void CDR(InputString *input_string)
+{
+    input_string->col += strlen("CDR");
+    get_next_char(input_string);
+    LIST(input_string);
+}
+
+void CONS(InputString *input_string)
+{
+    input_string->col += strlen("CONS");
+    get_next_char(input_string);
+    LIST(input_string);
+    LIST(input_string);
 }
 
 bool IOFUNC(InputString *input_string)
@@ -205,10 +215,10 @@ void PRINT(InputString *input_string)
     void *value = find_variable(input_string, letter);
     if (value == NULL)
     {
-        printf("variable %c is undefined", letter); 
-        exit(EXIT_FAILURE); 
+        printf("variable %c is undefined", letter);
+        exit(EXIT_FAILURE);
     }
-    printf("%c", value); 
+    printf("%c", value);
 }
 
 void *find_variable(InputString *input_string, char letter)
