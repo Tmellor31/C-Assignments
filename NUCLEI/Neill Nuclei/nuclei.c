@@ -1,5 +1,4 @@
 #include "nuclei.h"
-// Moves should be done in the parent function, when either calling the child or returning from the child
 
 void PROG(InputString *input_string);
 void INSTRCTS(InputString *input_string);
