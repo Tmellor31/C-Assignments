@@ -237,6 +237,7 @@ void CAR(InputString *input_string)
 {
     input_string->col += strlen("CAR");
     get_next_char(input_string);
+    LIST(input_string);
 }
 
 void CDR(InputString *input_string)
@@ -286,6 +287,8 @@ bool INTFUNC(InputString *input_string)
         lisp *list = LIST(input_string);
         lisp_isatomic(list);
         // interpreter here
+#else
+        LIST(input_string);
 #endif
         return true;
     }
@@ -310,6 +313,9 @@ bool BOOLFUNC(InputString *input_string)
         lisp *second = LIST(input_string);
         lisp_isatomic(first);
         lisp_isatomic(second);
+#else
+        LIST(input_string);
+        LIST(input_string);
 #endif
         return true;
     }
@@ -322,6 +328,9 @@ bool BOOLFUNC(InputString *input_string)
         lisp *second = LIST(input_string);
         lisp_isatomic(first);
         lisp_isatomic(second);
+#else
+        LIST(input_string);
+        LIST(input_string);
 #endif
         return true;
     }
@@ -334,7 +343,11 @@ bool BOOLFUNC(InputString *input_string)
         lisp *second = LIST(input_string);
         lisp_isatomic(first);
         lisp_isatomic(second);
+#else
+        LIST(input_string);
+        LIST(input_string);
 #endif
+
         return true;
     }
 #ifdef INTERP
@@ -397,6 +410,8 @@ void PRINT(InputString *input_string)
     char print_string[MAXLINEWIDTH] = "";
     lisp_tostring(list, print_string);
     puts(print_string);
+#else
+    LIST(input_string);
 #endif
 }
 
@@ -724,8 +739,8 @@ void LITERAL(InputString *input_string)
     move_next_char(input_string);
 #ifdef INTERP
     char literalstring[MAXLINEWIDTH] = "";
-#endif
     int counter = 0;
+#endif
     do
     {
         if (input_string->col >= (int)strlen(input_string->array2d[input_string->row]))
@@ -735,8 +750,6 @@ void LITERAL(InputString *input_string)
         }
 #ifdef INTERP
         literalstring[counter++] = current_position(input_string);
-#else
-        counter++;
 #endif
         input_string->col++;
     } while (!is_quote(current_position(input_string)));
@@ -744,7 +757,6 @@ void LITERAL(InputString *input_string)
     literalstring[counter] = NUM;
     lisp *literal_value = lisp_fromstring(literalstring);
 #endif
-
     move_next_char(input_string);
 
 #ifdef INTERP
