@@ -3,7 +3,7 @@
 
 void PROG(InputString *input_string);
 void INSTRCTS(InputString *input_string);
-void INSTRCT(lisp **lisp,InputString *input_string);
+void INSTRCT(lisp **lisp, InputString *input_string);
 bool LISTFUNC(lisp **new_variable, InputString *input_string);
 lisp *CAR(InputString *input_string);
 lisp *CDR(InputString *input_string);
@@ -26,12 +26,13 @@ bool is_char(char target);
 bool get_next_char(InputString *input_string);
 void move_next_char(InputString *input_string);
 bool find_next_target(InputString *input_string, bool (*char_matches)(char target));
-void FUNC(lisp *lisp, InputString *input_string);
-bool RETFUNC(lisp *new_variable, InputString *input_string);
-bool INTFUNC(lisp *literal, InputString *input_string);
+void FUNC(lisp **lisp, InputString *input_string);
+bool RETFUNC(lisp **lisp, InputString *input_string);
+bool INTFUNC(lisp **atom, InputString *input_string);
 bool IF(InputString *input_string);
 bool LOOP(InputString *input_string);
 void STRING(char *string, InputString *input_string);
+bool BOOLFUNC(lisp **atom, InputString *input_string);
 
 void test(void);
 
@@ -105,17 +106,17 @@ void PROG(InputString *input_string)
 
 void INSTRCTS(InputString *input_string)
 {
-    lisp *lisp = NULL; 
+    lisp *lisp = NULL;
     if (current_position(input_string) == CLOSE_BRACKET)
     {
         get_next_char(input_string);
         return;
     }
-    INSTRCT(&lisp,input_string);
+    INSTRCT(&lisp, input_string);
     INSTRCTS(input_string);
 }
 
-void INSTRCT(lisp **lisp,InputString *input_string)
+void INSTRCT(lisp **lisp, InputString *input_string)
 {
     if (current_position(input_string) != OPEN_BRACKET)
     {
@@ -124,7 +125,7 @@ void INSTRCT(lisp **lisp,InputString *input_string)
     }
     move_next_char(input_string);
 
-    FUNC(lisp,input_string);
+    FUNC(lisp, input_string);
     if (current_position(input_string) != CLOSE_BRACKET)
     {
         printf("Expected an ')' at row %i col %i. Received '%c' \n", input_string->row, input_string->col, current_position(input_string));
@@ -133,9 +134,9 @@ void INSTRCT(lisp **lisp,InputString *input_string)
     move_next_char(input_string);
 }
 
-void FUNC(lisp *lisp, InputString *input_string)
+void FUNC(lisp **lisp, InputString *input_string)
 {
-    bool haspassed = RETFUNC(lisp,input_string) ||
+    bool haspassed = RETFUNC(lisp, input_string) ||
                      IOFUNC(input_string) ||
                      IF(input_string) ||
                      LOOP(input_string);
@@ -147,11 +148,11 @@ void FUNC(lisp *lisp, InputString *input_string)
     }
 }
 
-bool RETFUNC(lisp *atom, InputString *input_string)
+bool RETFUNC(lisp **lisp, InputString *input_string)
 {
-    bool haspassed = LISTFUNC(atom, input_string) ||
-                     INTFUNC(atom,input_string) ||
-                     BOOLFUNC(atom,input_string);
+    bool haspassed = LISTFUNC(lisp, input_string) ||
+                     INTFUNC(lisp, input_string) ||
+                     BOOLFUNC(lisp, input_string);
 
     return haspassed;
 }
@@ -207,47 +208,60 @@ lisp *CONS(InputString *input_string)
     return lisp_cons(firstlist, secondlist);
 }
 
-bool INTFUNC(lisp *literal, InputString *input_string)
+bool INTFUNC(lisp **atom, InputString *input_string)
 {
     if (is_at_start(input_string->array2d[input_string->row], "PLUS", input_string->col))
     {
         input_string->col += strlen("PLUS");
-        LIST(input_string);
-        LIST(input_string);
+        lisp *first = LIST(input_string);
+        lisp *second = LIST(input_string);
+        lisp_isatomic(first);
+        lisp_isatomic(second);
+        // interpreter here
         return true;
     }
     if (is_at_start(input_string->array2d[input_string->row], "LENGTH", input_string->col))
     {
         input_string->col += strlen("LENGTH");
-        LIST(input_string);
+        lisp *list = LIST(input_string);
+        lisp_isatomic(list);
+        // interpreter here
         return true;
     }
+    *atom = NULL;
     return false;
 }
 
-bool BOOLFUNC(lisp *literal, InputString *input_string)
+bool BOOLFUNC(lisp **atom, InputString *input_string)
 {
     if (is_at_start(input_string->array2d[input_string->row], "LESS", input_string->col))
     {
         input_string->col += strlen("LESS");
-        LIST(input_string);
-        LIST(input_string);
+        lisp *first = LIST(input_string);
+        lisp *second = LIST(input_string);
+        lisp_isatomic(first);
+        lisp_isatomic(second);
         return true;
     }
     if (is_at_start(input_string->array2d[input_string->row], "GREATER", input_string->col))
     {
         input_string->col += strlen("GREATER");
-        LIST(input_string);
-        LIST(input_string);
+        lisp *first = LIST(input_string);
+        lisp *second = LIST(input_string);
+        lisp_isatomic(first);
+        lisp_isatomic(second);
         return true;
     }
     if (is_at_start(input_string->array2d[input_string->row], "EQUAL", input_string->col))
     {
         input_string->col += strlen("EQUAL");
-        LIST(input_string);
-        LIST(input_string);
+        lisp *first = LIST(input_string);
+        lisp *second = LIST(input_string);
+        lisp_isatomic(first);
+        lisp_isatomic(second);
         return true;
     }
+    *atom = NULL;
     return false;
 }
 
@@ -421,31 +435,31 @@ bool IF(InputString *input_string)
         return false;
     }
     input_string->col += strlen("IF");
-    if (!current_position(input_string) == '(')
+    if (current_position(input_string) != '(')
     {
         printf("Expected a '(' after IF\n");
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
-    if (!BOOLFUNC(&lisp, input_string))
+    if (!BOOLFUNC(lisp, input_string))
     {
         printf("BOOLFUNC failed to parse\n");
         exit(EXIT_FAILURE);
     }
-    if (!current_position(input_string) == ')')
+    if (current_position(input_string) != ')')
     {
         printf("Expected a ')' after BOOLFUNC\n");
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
-    if (!current_position(input_string) == '(')
+    if (current_position(input_string) != '(')
     {
         printf("Expected a '(' after BOOLFUNC BEFORE INSTRCTS\n");
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
     INSTRCTS(input_string);
-    if (!current_position(input_string) == '(')
+    if (current_position(input_string) != '(')
     {
         printf("Expected a '(' after IF\n");
         exit(EXIT_FAILURE);
@@ -463,29 +477,30 @@ bool LOOP(InputString *input_string)
         return false;
     }
     input_string->col += strlen("WHILE");
-    if (!current_position(input_string) == '(')
+    if (current_position(input_string) != '(')
     {
         printf("Expected a '(' after WHILE\n");
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
-    if (!BOOLFUNC(&lisp, input_string))
+    if (!BOOLFUNC(lisp, input_string))
     {
         printf("BOOLFUNC failed to parse\n");
         exit(EXIT_FAILURE);
     }
-    if (!current_position(input_string) == ')')
+    if (current_position(input_string) != ')')
     {
         printf("Expected a ')' after BOOLFUNC\n");
         exit(EXIT_FAILURE);
     }
-    if (!current_position(input_string) == '(')
+    if (current_position(input_string) != '(')
     {
         printf("Expected a '(' after BOOLFUNC and before INSTRCTS\n");
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
     INSTRCTS(input_string);
+    return true;
 }
 
 lisp *LIST(InputString *input_string)
