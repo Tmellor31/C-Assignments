@@ -49,8 +49,6 @@ InputString *make_input_string(void)
     return input_string;
 }
 
-
-
 char current_position(InputString *input_string)
 {
     return input_string->array2d[input_string->row][input_string->col];
@@ -304,8 +302,12 @@ bool BOOLFUNC(InputString *input_string)
 #ifdef INTERP
         lisp *first = LIST(input_string);
         lisp *second = LIST(input_string);
-        lisp_isatomic(first);
-        lisp_isatomic(second);
+        if (!lisp_isatomic(first) || !lisp_isatomic(second))
+        {
+            printf("Cannot check LESS between non-atomic values row %i col %i\n", input_string->row, input_string->col);
+            exit(EXIT_FAILURE);
+        }
+        *atom = lisp_atom(first->atom < second->atom);
 #else
         LIST(input_string);
         LIST(input_string);
@@ -319,8 +321,13 @@ bool BOOLFUNC(InputString *input_string)
 #ifdef INTERP
         lisp *first = LIST(input_string);
         lisp *second = LIST(input_string);
-        lisp_isatomic(first);
-        lisp_isatomic(second);
+        if (!lisp_isatomic(first) || !lisp_isatomic(second))
+        {
+            printf("Cannot check GREATER between non-atomic values row %i col %i\n", input_string->row, input_string->col);
+            exit(EXIT_FAILURE);
+        }
+        *atom = lisp_atom(first->atom > second->atom);
+
 #else
         LIST(input_string);
         LIST(input_string);
@@ -334,8 +341,13 @@ bool BOOLFUNC(InputString *input_string)
 #ifdef INTERP
         lisp *first = LIST(input_string);
         lisp *second = LIST(input_string);
-        lisp_isatomic(first);
-        lisp_isatomic(second);
+        if (!lisp_isatomic(first) || !lisp_isatomic(second))
+        {
+            printf("Cannot check EQUAL between non-atomic values row %i col %i\n", input_string->row, input_string->col);
+            exit(EXIT_FAILURE);
+        }
+        *atom = lisp_atom(first->atom == second->atom);
+
 #else
         LIST(input_string);
         LIST(input_string);
@@ -575,6 +587,25 @@ bool IF(InputString *input_string)
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
+#ifdef INTERP
+    if ((*lisp)->atom)
+    {
+        INSTRCTS(input_string);
+        if (current_position(input_string) != '(')
+        {
+            printf("Expected a '(' after IF\n");
+            exit(EXIT_FAILURE);
+        }
+        move_next_char(input_string);
+        // move past next INSTRCTS
+        
+    }
+    else
+    {
+        // move past first INSTRCTS
+        INSTRCTS(input_string);
+    }
+#else
     INSTRCTS(input_string);
     if (current_position(input_string) != '(')
     {
@@ -583,6 +614,7 @@ bool IF(InputString *input_string)
     }
     move_next_char(input_string);
     INSTRCTS(input_string);
+#endif
     return true;
 }
 
@@ -835,7 +867,7 @@ void test(void)
     find_next_target(test_input_string, &is_quote);
     assert(current_position(test_input_string) == '\'');
 
-    free (test_input_string); 
+    free(test_input_string);
 
     /*InputString *main_input_string = make_input_string();
     strcpy(main_input_string->array2d[main_input_string->row_count++], "(");
