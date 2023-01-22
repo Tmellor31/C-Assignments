@@ -4,10 +4,9 @@
 #include <assert.h>
 #include <math.h>
 #include <ctype.h>
-#include <stdbool.h>
+#include "general.h"
 #ifdef INTERP
-#  include "general.h"
-#  include "specific.h"
+#include "specific.h"
 #endif
 #define MAXLINENO 50
 #define MAXLINEWIDTH 50
@@ -19,11 +18,13 @@
 #define CLOSE_BRACKET ')'
 #define COMMENT '#'
 
+#ifdef INTERP
 typedef struct Var
 {
-    lisp *value; 
+    lisp *value;
     char name;
 } Var;
+#endif
 
 typedef struct InputString
 {
@@ -31,10 +32,11 @@ typedef struct InputString
     int row;
     int col;
     int row_count;
+#ifdef INTERP
     Var variables[MAXVARIABLES];
     int variable_count;
+#endif
 } InputString;
-
 
 void PROG(InputString *input_string);
 void INSTRCTS(InputString *input_string);
@@ -69,28 +71,28 @@ bool LOOP(InputString *input_string);
 
 #ifdef INTERP
 lisp *LIST(InputString *input_string);
+char VAR(InputString *input_string);
 #else
 void LIST(InputString *input_string);
+void VAR(InputString *input_string);
 #endif
-
-char VAR(InputString *input_string);
-void STRING(char *string, InputString *input_string);
 
 #ifdef INTERP
+void STRING(char *string, InputString *input_string);
 lisp *LITERAL(InputString *input_string);
-#else
-void LITERAL(InputString *input_string); 
-#endif
-
 Var *literal_list(InputString *input_string);
 Var *literal_digit(InputString *input_string);
+#else
+void STRING(InputString *input_string);
+void LITERAL(InputString *input_string);
+#endif
 
 #ifdef INTERP
 void add_variable(InputString *input_string, char letter, lisp *var);
 lisp *find_variable(InputString *input_string, char letter);
 #else
 void add_variable(InputString *input_string, char letter);
-void find_variable(InputString *input_string, char letter); 
+void find_variable(InputString *input_string, char letter);
 #endif
 
 InputString *make_input_string(void);

@@ -25,7 +25,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    while (fgets(primary_input_string->array2d[primary_input_string->row_count], MAXLINEWIDTH, fp) != NULL)
+    while (fgets(primary_input_string->array2d[primary_input_string->row_count],
+                 MAXLINEWIDTH, fp) != NULL)
     {
         if (primary_input_string->array2d[primary_input_string->row_count][0] != COMMENT)
         {
@@ -52,9 +53,12 @@ InputString *make_input_string(void)
 {
     InputString *input_string = ncalloc(1, sizeof(InputString));
     input_string->row_count = 0;
+#ifdef INTERP
     input_string->variable_count = 0;
+#endif
     return input_string;
 }
+
 char current_position(InputString *input_string)
 {
     return input_string->array2d[input_string->row][input_string->col];
@@ -73,17 +77,25 @@ void PROG(InputString *input_string)
 
 void INSTRCTS(InputString *input_string)
 {
-    lisp *lisp = NULL;
     if (current_position(input_string) == CLOSE_BRACKET)
     {
         get_next_char(input_string);
         return;
     }
+#ifdef INTERP
+    lisp *lisp = NULL;
     INSTRCT(&lisp, input_string);
+#else
+    INSTRCT(input_string);
+#endif
     INSTRCTS(input_string);
 }
 
+#ifdef INTERP
 void INSTRCT(lisp **lisp, InputString *input_string)
+#else
+void INSTRCT(InputString *input_string)
+#endif
 {
     if (current_position(input_string) != OPEN_BRACKET)
     {
@@ -92,7 +104,11 @@ void INSTRCT(lisp **lisp, InputString *input_string)
     }
     move_next_char(input_string);
 
+#ifdef INTERP
     FUNC(lisp, input_string);
+#else
+    FUNC(input_string);
+#endif
     if (current_position(input_string) != CLOSE_BRACKET)
     {
         printf("Expected an ')' at row %i col %i. Received '%c' \n", input_string->row, input_string->col, current_position(input_string));
@@ -101,12 +117,23 @@ void INSTRCT(lisp **lisp, InputString *input_string)
     move_next_char(input_string);
 }
 
+#ifdef INTERP
 void FUNC(lisp **lisp, InputString *input_string)
+#else
+void FUNC(InputString *input_string)
+#endif
 {
+#ifdef INTERP
     bool haspassed = RETFUNC(lisp, input_string) ||
                      IOFUNC(input_string) ||
                      IF(input_string) ||
                      LOOP(input_string);
+#else
+    bool haspassed = RETFUNC(input_string) ||
+                     IOFUNC(input_string) ||
+                     IF(input_string) ||
+                     LOOP(input_string);
+#endif
 
     if (!haspassed)
     {
@@ -115,6 +142,7 @@ void FUNC(lisp **lisp, InputString *input_string)
     }
 }
 
+#ifdef INTERP
 bool RETFUNC(lisp **lisp, InputString *input_string)
 {
     bool haspassed = LISTFUNC(lisp, input_string) ||
@@ -123,31 +151,61 @@ bool RETFUNC(lisp **lisp, InputString *input_string)
 
     return haspassed;
 }
+#else
+bool RETFUNC(InputString *input_string)
+{
+    bool haspassed = LISTFUNC(input_string) ||
+                     INTFUNC(input_string) ||
+                     BOOLFUNC(input_string);
 
+    return haspassed;
+}
+#endif
+
+#ifdef INTERP
 bool LISTFUNC(lisp **new_variable, InputString *input_string)
+#else
+bool LISTFUNC(InputString *input_string)
+#endif
 {
     if (is_at_start(input_string->array2d[input_string->row], "CAR", input_string->col))
     {
+#ifdef INTERP
         *new_variable = CAR(input_string);
+#else
+        CAR(input_string);
+#endif
         return true;
     }
     else if (is_at_start(input_string->array2d[input_string->row], "CDR", input_string->col))
     {
+#ifdef INTERP
         *new_variable = CDR(input_string);
+#else
+        CDR(input_string);
+#endif
         return true;
     }
     else if (is_at_start(input_string->array2d[input_string->row], "CONS", input_string->col))
     {
+#ifdef INTERP
         *new_variable = CONS(input_string);
+#else
+        CONS(input_string);
+#endif
         return true;
     }
     else
     {
         // No CAR,CDR or CONS found
+#ifdef INTERP
         *new_variable = NULL;
+#endif
         return false;
     }
 }
+
+#ifdef INTERP
 lisp *CAR(InputString *input_string)
 {
     input_string->col += strlen("CAR");
@@ -174,66 +232,114 @@ lisp *CONS(InputString *input_string)
     lisp *secondlist = LIST(input_string);
     return lisp_cons(firstlist, secondlist);
 }
+#else
+void CAR(InputString *input_string)
+{
+    input_string->col += strlen("CAR");
+    get_next_char(input_string);
+}
 
+void CDR(InputString *input_string)
+{
+    input_string->col += strlen("CDR");
+    get_next_char(input_string);
+    LIST(input_string);
+}
+
+void CONS(InputString *input_string)
+{
+    input_string->col += strlen("CONS");
+    get_next_char(input_string);
+    LIST(input_string);
+    LIST(input_string);
+}
+#endif
+
+#ifdef INTERP
 bool INTFUNC(lisp **atom, InputString *input_string)
+#else
+bool INTFUNC(InputString *input_string)
+#endif
 {
     if (is_at_start(input_string->array2d[input_string->row], "PLUS", input_string->col))
     {
         input_string->col += strlen("PLUS");
         move_next_char(input_string);
+#ifdef INTERP
         lisp *first = LIST(input_string);
         lisp *second = LIST(input_string);
         lisp_isatomic(first);
         lisp_isatomic(second);
         // interpreter here
+#else
+        LIST(input_string);
+        LIST(input_string);
+#endif
         return true;
     }
+
     if (is_at_start(input_string->array2d[input_string->row], "LENGTH", input_string->col))
     {
         input_string->col += strlen("LENGTH");
         move_next_char(input_string);
+#ifdef INTERP
         lisp *list = LIST(input_string);
         lisp_isatomic(list);
         // interpreter here
+#endif
         return true;
     }
+#ifdef INTERP
     *atom = NULL;
+#endif
     return false;
 }
 
+#ifdef INTERP
 bool BOOLFUNC(lisp **atom, InputString *input_string)
+#else
+bool BOOLFUNC(InputString *input_string)
+#endif
 {
     if (is_at_start(input_string->array2d[input_string->row], "LESS", input_string->col))
     {
         input_string->col += strlen("LESS");
         move_next_char(input_string);
+#ifdef INTERP
         lisp *first = LIST(input_string);
         lisp *second = LIST(input_string);
         lisp_isatomic(first);
         lisp_isatomic(second);
+#endif
         return true;
     }
     if (is_at_start(input_string->array2d[input_string->row], "GREATER", input_string->col))
     {
         input_string->col += strlen("GREATER");
         move_next_char(input_string);
+#ifdef INTERP
         lisp *first = LIST(input_string);
         lisp *second = LIST(input_string);
         lisp_isatomic(first);
         lisp_isatomic(second);
+#endif
         return true;
     }
     if (is_at_start(input_string->array2d[input_string->row], "EQUAL", input_string->col))
     {
         input_string->col += strlen("EQUAL");
         move_next_char(input_string);
+#ifdef INTERP
         lisp *first = LIST(input_string);
         lisp *second = LIST(input_string);
         lisp_isatomic(first);
         lisp_isatomic(second);
+#endif
         return true;
     }
+#ifdef INTERP
     *atom = NULL;
+#endif
     return false;
 }
 
@@ -262,28 +368,39 @@ void SET(InputString *input_string)
 {
     input_string->col += strlen("SET");
     move_next_char(input_string);
+#ifdef INTERP
     char letter = VAR(input_string);
     lisp *list = LIST(input_string);
     add_variable(input_string, letter, list);
+#else
+    VAR(input_string);
+    LIST(input_string);
+#endif
 }
 
+#ifdef INTERP
 void add_variable(InputString *input_string, char letter, lisp *var)
 {
     input_string->variables[input_string->variable_count].value = var;
     input_string->variables[input_string->variable_count].name = letter;
     input_string->variable_count++;
 }
+#endif
 
 void PRINT(InputString *input_string)
 {
     input_string->col += strlen("PRINT");
     move_next_char(input_string);
+
+#ifdef INTERP
     lisp *list = LIST(input_string);
     char print_string[MAXLINEWIDTH] = "";
     lisp_tostring(list, print_string);
     puts(print_string);
+#endif
 }
 
+#ifdef INTERP
 lisp *find_variable(InputString *input_string, char letter)
 {
     for (int i = 0; i < input_string->variable_count; i++)
@@ -295,15 +412,24 @@ lisp *find_variable(InputString *input_string, char letter)
     }
     return NULL;
 }
+#endif
 
+#ifdef INTERP
 char VAR(InputString *input_string)
+#else
+void VAR(InputString *input_string)
+#endif
 {
     if (current_position(input_string) >= 'A' &&
         current_position(input_string) <= 'Z')
     {
+#ifdef INTERP
         char letter = current_position(input_string);
+#endif
         move_next_char(input_string);
+#ifdef INTERP
         return letter;
+#endif
     }
     else
     {
@@ -395,7 +521,6 @@ bool find_next_target(InputString *input_string, bool (*char_matches)(char targe
 
 bool IF(InputString *input_string)
 {
-    lisp **lisp = NULL;
     if (!is_at_start(input_string->array2d[input_string->row], "IF", input_string->col))
     {
         return false;
@@ -407,7 +532,12 @@ bool IF(InputString *input_string)
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
+#ifdef INTERP
+    lisp **lisp = NULL;
     if (!BOOLFUNC(lisp, input_string))
+#else
+    if (!BOOLFUNC(input_string))
+#endif
     {
         printf("BOOLFUNC failed to parse\n");
         exit(EXIT_FAILURE);
@@ -437,7 +567,6 @@ bool IF(InputString *input_string)
 
 bool LOOP(InputString *input_string)
 {
-    lisp **lisp = NULL;
     if (!is_at_start(input_string->array2d[input_string->row], "WHILE", input_string->col))
     {
         return false;
@@ -450,7 +579,12 @@ bool LOOP(InputString *input_string)
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
+#ifdef INTERP
+    lisp **lisp = NULL;
     if (!BOOLFUNC(lisp, input_string))
+#else
+    if (!BOOLFUNC(input_string))
+#endif
     {
         printf("BOOLFUNC failed to parse\n");
         exit(EXIT_FAILURE);
@@ -471,17 +605,24 @@ bool LOOP(InputString *input_string)
     return true;
 }
 
+#ifdef INTERP
 lisp *LIST(InputString *input_string)
+#else
+void LIST(InputString *input_string)
+#endif
 {
     if (is_at_start(input_string->array2d[input_string->row], "NIL", input_string->col))
     {
         input_string->col += strlen("NIL");
+#ifdef INTERP
         return NULL;
+#endif
     }
 
     else if (current_position(input_string) >= 'A' &&
              current_position(input_string) <= 'Z')
     {
+#ifdef INTERP
         char letter = VAR(input_string);
         lisp *value = find_variable(input_string, letter);
         if (value == NULL)
@@ -490,17 +631,28 @@ lisp *LIST(InputString *input_string)
             exit(EXIT_FAILURE);
         }
         return value;
+#else
+        VAR(input_string);
+#endif
     }
     else if (current_position(input_string) == '\'')
     {
+#ifdef INTERP
         return LITERAL(input_string);
+#else
+        LITERAL(input_string);
+#endif
     }
     else if (current_position(input_string) == OPEN_BRACKET)
     {
-        lisp *list_value = NULL;
         move_next_char(input_string);
 
+#ifdef INTERP
+        lisp *list_value = NULL;
         if (!RETFUNC(&list_value, input_string))
+#else
+        if (!RETFUNC(input_string))
+#endif
         {
             printf("Expected a CAR, CONS or CDR? at row %i col %i\n", input_string->row, input_string->col);
             exit(EXIT_FAILURE);
@@ -512,17 +664,25 @@ lisp *LIST(InputString *input_string)
             exit(EXIT_FAILURE);
         }
         move_next_char(input_string);
+#ifdef INTERP
         return list_value;
+#endif
     }
     else
     {
         printf("Expected a LITERAL, 'NIL' or '(' at row %i, col %i", input_string->row, input_string->col);
         exit(EXIT_FAILURE);
     }
-    return 0;
+#ifdef INTERP
+    return NULL;
+#endif
 }
 
+#ifdef INTERP
 void STRING(char *string, InputString *input_string)
+#else
+void STRING(InputString *input_string)
+#endif
 {
     if (current_position(input_string) != '"')
     {
@@ -530,19 +690,31 @@ void STRING(char *string, InputString *input_string)
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
+#ifdef INTERP
     char datastring[MAXLINEWIDTH] = "";
+#endif
     int counter = 0;
     do
     {
+#ifdef INTERP
         datastring[counter++] = current_position(input_string);
+#else
+        counter++;
+#endif
         input_string->col++;
     } while (current_position(input_string) != '"');
+#ifdef INTERP
     datastring[counter] = NUM;
     strcpy(string, datastring);
+#endif
     move_next_char(input_string);
 }
 
+#ifdef INTERP
 lisp *LITERAL(InputString *input_string)
+#else
+void LITERAL(InputString *input_string)
+#endif
 {
     if (current_position(input_string) != '\'')
     {
@@ -550,24 +722,34 @@ lisp *LITERAL(InputString *input_string)
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
+#ifdef INTERP
     char literalstring[MAXLINEWIDTH] = "";
+#endif
     int counter = 0;
     do
     {
+        if (input_string->col >= (int)strlen(input_string->array2d[input_string->row]))
+        {
+            printf("Reached end of line %i. Expected closing \'", input_string->row);
+            exit(EXIT_FAILURE);
+        }
+#ifdef INTERP
         literalstring[counter++] = current_position(input_string);
+#else
+        counter++;
+#endif
         input_string->col++;
     } while (!is_quote(current_position(input_string)));
+#ifdef INTERP
     literalstring[counter] = NUM;
     lisp *literal_value = lisp_fromstring(literalstring);
+#endif
 
-    /*if (!get_next_quote(input_string))
-    {
-        printf("Unmatched quote at row %i col %i", input_string->row, input_string->col);
-        exit(EXIT_FAILURE);
-    }*/
     move_next_char(input_string);
 
+#ifdef INTERP
     return literal_value;
+#endif
 }
 
 /*lisp *literal_list(InputString *input_string)
