@@ -213,6 +213,7 @@ bool INTFUNC(lisp **atom, InputString *input_string)
     if (is_at_start(input_string->array2d[input_string->row], "PLUS", input_string->col))
     {
         input_string->col += strlen("PLUS");
+        move_next_char(input_string);
         lisp *first = LIST(input_string);
         lisp *second = LIST(input_string);
         lisp_isatomic(first);
@@ -223,6 +224,7 @@ bool INTFUNC(lisp **atom, InputString *input_string)
     if (is_at_start(input_string->array2d[input_string->row], "LENGTH", input_string->col))
     {
         input_string->col += strlen("LENGTH");
+        move_next_char(input_string);
         lisp *list = LIST(input_string);
         lisp_isatomic(list);
         // interpreter here
@@ -237,6 +239,7 @@ bool BOOLFUNC(lisp **atom, InputString *input_string)
     if (is_at_start(input_string->array2d[input_string->row], "LESS", input_string->col))
     {
         input_string->col += strlen("LESS");
+        move_next_char(input_string);
         lisp *first = LIST(input_string);
         lisp *second = LIST(input_string);
         lisp_isatomic(first);
@@ -246,6 +249,7 @@ bool BOOLFUNC(lisp **atom, InputString *input_string)
     if (is_at_start(input_string->array2d[input_string->row], "GREATER", input_string->col))
     {
         input_string->col += strlen("GREATER");
+        move_next_char(input_string);
         lisp *first = LIST(input_string);
         lisp *second = LIST(input_string);
         lisp_isatomic(first);
@@ -255,6 +259,7 @@ bool BOOLFUNC(lisp **atom, InputString *input_string)
     if (is_at_start(input_string->array2d[input_string->row], "EQUAL", input_string->col))
     {
         input_string->col += strlen("EQUAL");
+        move_next_char(input_string);
         lisp *first = LIST(input_string);
         lisp *second = LIST(input_string);
         lisp_isatomic(first);
@@ -306,7 +311,7 @@ void PRINT(InputString *input_string)
 {
     input_string->col += strlen("PRINT");
     move_next_char(input_string);
-    lisp *list = LIST(input_string); 
+    lisp *list = LIST(input_string);
     char print_string[MAXLINEWIDTH] = "";
     lisp_tostring(list, print_string);
     puts(print_string);
@@ -471,6 +476,7 @@ bool LOOP(InputString *input_string)
         return false;
     }
     input_string->col += strlen("WHILE");
+    move_next_char(input_string);
     if (current_position(input_string) != '(')
     {
         printf("Expected a '(' after WHILE\n");
@@ -487,6 +493,7 @@ bool LOOP(InputString *input_string)
         printf("Expected a ')' after BOOLFUNC\n");
         exit(EXIT_FAILURE);
     }
+    move_next_char(input_string);
     if (current_position(input_string) != '(')
     {
         printf("Expected a '(' after BOOLFUNC and before INSTRCTS\n");
@@ -512,10 +519,10 @@ lisp *LIST(InputString *input_string)
         lisp *value = find_variable(input_string, letter);
         if (value == NULL)
         {
-            printf("variable %c is undefined", letter);
+            printf("variable %c is undefined at row %i col %i", letter, input_string->row, input_string->col);
             exit(EXIT_FAILURE);
         }
-        return value; 
+        return value;
     }
     else if (current_position(input_string) == '\'')
     {
@@ -526,7 +533,7 @@ lisp *LIST(InputString *input_string)
         lisp *list_value = NULL;
         move_next_char(input_string);
 
-        if (!LISTFUNC(&list_value, input_string))
+        if (!RETFUNC(&list_value, input_string))
         {
             printf("Expected a CAR, CONS or CDR? at row %i col %i\n", input_string->row, input_string->col);
             exit(EXIT_FAILURE);
