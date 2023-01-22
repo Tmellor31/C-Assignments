@@ -1,7 +1,7 @@
 #include "specific.h"
 
 #define NIL NULL 
-#define BIGSTR 50 
+#define BIGSTR 200 
 
 // Non-extension code works and has no mem leaks when I run it. I've attempted to write lisp_reduce, but can't test it aganist testlisp.c -
 // - as that requires the from string function which I haven't done.

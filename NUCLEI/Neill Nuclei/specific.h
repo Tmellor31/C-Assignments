@@ -10,7 +10,7 @@
 #include "lisp.h" 
 #define LISPIMPL "Linked" 
 #define UNBOUND -1 
-#define ATOMSTRSIZE 10
+#define ATOMSTRSIZE 50
 #define MAXLISTLENGTH 100
 #define NUM '\0'
 
