@@ -306,15 +306,9 @@ void PRINT(InputString *input_string)
 {
     input_string->col += strlen("PRINT");
     move_next_char(input_string);
-    char letter = VAR(input_string);
-    lisp *value = find_variable(input_string, letter);
-    if (value == NULL)
-    {
-        printf("variable %c is undefined", letter);
-        exit(EXIT_FAILURE);
-    }
+    lisp *list = LIST(input_string); 
     char print_string[MAXLINEWIDTH] = "";
-    lisp_tostring(value, print_string);
+    lisp_tostring(list, print_string);
     puts(print_string);
 }
 
@@ -505,14 +499,27 @@ bool LOOP(InputString *input_string)
 
 lisp *LIST(InputString *input_string)
 {
-    if (current_position(input_string) == '\'')
-    {
-        return LITERAL(input_string);
-    }
-    else if (is_at_start(input_string->array2d[input_string->row], "NIL", input_string->col))
+    if (is_at_start(input_string->array2d[input_string->row], "NIL", input_string->col))
     {
         input_string->col += strlen("NIL");
         return NULL;
+    }
+
+    else if (current_position(input_string) >= 'A' &&
+             current_position(input_string) <= 'Z')
+    {
+        char letter = VAR(input_string);
+        lisp *value = find_variable(input_string, letter);
+        if (value == NULL)
+        {
+            printf("variable %c is undefined", letter);
+            exit(EXIT_FAILURE);
+        }
+        return value; 
+    }
+    else if (current_position(input_string) == '\'')
+    {
+        return LITERAL(input_string);
     }
     else if (current_position(input_string) == OPEN_BRACKET)
     {
