@@ -200,17 +200,48 @@ lisp *CONS(InputString *input_string)
     return lisp_cons(firstlist, secondlist);
 }
 
-int INTFUNC(InputString *input_string)
+bool INTFUNC(lisp *literal, InputString *input_string)
 {
     if (is_at_start(input_string->array2d[input_string->row], "PLUS", input_string->col))
     {
-        LIST(input_string); 
-        LIST(input_string); 
+        input_string->col += strlen("PLUS");
+        LIST(input_string);
+        LIST(input_string);
+        return true;
     }
+    if (is_at_start(input_string->array2d[input_string->row], "LENGTH", input_string->col))
+    {
+        input_string->col += strlen("LENGTH");
+        LIST(input_string);
+        return true;
+    }
+    return false;
 }
 
-bool BOOLFUNC(InputString *input_string)
+bool BOOLFUNC(lisp *literal, InputString *input_string)
 {
+    if (is_at_start(input_string->array2d[input_string->row], "LESS", input_string->col))
+    {
+        input_string->col += strlen("LESS");
+        LIST(input_string);
+        LIST(input_string);
+        return true;
+    }
+    if (is_at_start(input_string->array2d[input_string->row], "GREATER", input_string->col))
+    {
+        input_string->col += strlen("GREATER");
+        LIST(input_string);
+        LIST(input_string);
+        return true;
+    }
+    if (is_at_start(input_string->array2d[input_string->row], "EQUAL", input_string->col))
+    {
+        input_string->col += strlen("EQUAL");
+        LIST(input_string);
+        LIST(input_string);
+        return true;
+    }
+    return false;
 }
 
 bool IOFUNC(InputString *input_string)
@@ -478,8 +509,24 @@ lisp *LIST(InputString *input_string)
     return 0;
 }
 
-char *STRING(InputString *input_string)
+void STRING(char *string, InputString *input_string)
 {
+    if (current_position(input_string) != '"')
+    {
+        printf("Expected \" at the start of STRING\n");
+        exit(EXIT_FAILURE);
+    }
+    move_next_char(input_string);
+    char datastring[MAXLINEWIDTH] = "";
+    int counter = 0;
+    do
+    {
+        datastring[counter++] = current_position(input_string);
+        input_string->col++;
+    } while (current_position(input_string) != '"');
+    datastring[counter] = NUM;
+    strcpy(string, datastring);
+    move_next_char(input_string); 
 }
 
 lisp *LITERAL(InputString *input_string)
