@@ -11,7 +11,6 @@
 #define MAXLINENO 100
 #define MAXLINEWIDTH 200
 #define MAXVARIABLES 50
-#define MAXLISTSIZE 50
 #define SPACE ' '
 #define NEWLINE '\n'
 #define OPEN_BRACKET '('
