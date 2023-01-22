@@ -1,39 +1,6 @@
 #include "nuclei.h"
 // Need to add function to free things, tons of leaks rn
 
-void PROG(InputString *input_string);
-void INSTRCTS(InputString *input_string);
-void INSTRCT(lisp **lisp, InputString *input_string);
-bool LISTFUNC(lisp **new_variable, InputString *input_string);
-lisp *CAR(InputString *input_string);
-lisp *CDR(InputString *input_string);
-lisp *CONS(InputString *input_string);
-bool IOFUNC(InputString *input_string);
-lisp *LIST(InputString *input_string);
-char VAR(InputString *input_string);
-lisp *LITERAL(InputString *input_string);
-Var *literal_list(InputString *input_string);
-Var *literal_digit(InputString *input_string);
-void SET(InputString *input_string);
-void add_variable(InputString *input_string, char letter, lisp *var);
-void PRINT(InputString *input_string);
-lisp *find_variable(InputString *input_string, char letter);
-InputString *make_input_string(void);
-bool is_at_start(char *inputstring, char *keyword, int inputposition);
-char current_position(InputString *input_string);
-bool end_of_file_reached(InputString *input_string);
-bool is_char(char target);
-bool get_next_char(InputString *input_string);
-void move_next_char(InputString *input_string);
-bool find_next_target(InputString *input_string, bool (*char_matches)(char target));
-void FUNC(lisp **lisp, InputString *input_string);
-bool RETFUNC(lisp **lisp, InputString *input_string);
-bool INTFUNC(lisp **atom, InputString *input_string);
-bool IF(InputString *input_string);
-bool LOOP(InputString *input_string);
-void STRING(char *string, InputString *input_string);
-bool BOOLFUNC(lisp **atom, InputString *input_string);
-
 void test(void);
 
 int main(int argc, char *argv[])
