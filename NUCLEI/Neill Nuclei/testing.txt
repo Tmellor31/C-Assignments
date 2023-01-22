@@ -1,0 +1,11 @@
+I tested this assignment through a few methods: 
+Small functions were tested via assert checks, and where appropriate through passing 
+a string titled as 'test_input_string' - I have commented this out in test, but left in the code so 
+an example of how I was testing can be seen. 
+Some challenges arose as a result of avoiding spaces via the use of 'move_next_char'
+to move to the next character rather than simply using brackets to seperate the words.
+However, the advantage of this approach was that files with statements such as 
+'CARA' instead of 'CAR A' would not parse correctly - thus following the 
+grammar more closely. 
+I also wrote ncl files to check the implementation of functions after writing them
+in both my parser and interpreter - utilising the various exit messages to troubleshoot. 
