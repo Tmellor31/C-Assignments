@@ -35,17 +35,7 @@ int main(int argc, char *argv[])
     }
     fclose(fp);
     PROG(primary_input_string);
-    InputString *main_input_string = make_input_string();
-    strcpy(main_input_string->array2d[main_input_string->row_count++], "(");
-    strcpy(main_input_string->array2d[main_input_string->row_count++], " ( CAR '2' ) ");
-    strcpy(main_input_string->array2d[main_input_string->row_count++], " (SET B '(1 2 3)' )");
-    strcpy(main_input_string->array2d[main_input_string->row_count++], "");
-    strcpy(main_input_string->array2d[main_input_string->row_count++], ")");
-    PROG(main_input_string);
-
     free(primary_input_string);
-    free(main_input_string);
-
     return 0;
 }
 
@@ -73,6 +63,7 @@ void PROG(InputString *input_string)
     }
     move_next_char(input_string);
     INSTRCTS(input_string);
+    printf("Parsed OK\n");
 }
 
 void INSTRCTS(InputString *input_string)
@@ -137,7 +128,7 @@ void FUNC(InputString *input_string)
 
     if (!haspassed)
     {
-        printf("No RETFUNC, IOFUNC, IF or LOOP found within FUNC\n");
+        printf("No RETFUNC, IOFUNC, IF or LOOP found within FUNC row %i col %i \n", input_string->row, input_string->col);
         exit(EXIT_FAILURE);
     }
 }
@@ -404,15 +395,27 @@ void PRINT(InputString *input_string)
 {
     input_string->col += strlen("PRINT");
     move_next_char(input_string);
-
+    if (current_position(input_string) == '"')
+    {
 #ifdef INTERP
-    lisp *list = LIST(input_string);
-    char print_string[MAXLINEWIDTH] = "";
-    lisp_tostring(list, print_string);
-    puts(print_string);
+        char *string = NULL;
+        STRING(string, input_string);
+        puts(string);
 #else
-    LIST(input_string);
+        STRING(input_string);
 #endif
+    }
+    else
+    {
+#ifdef INTERP
+        lisp *list = LIST(input_string);
+        char print_string[MAXLINEWIDTH] = "";
+        lisp_tostring(list, print_string);
+        puts(print_string);
+#else
+        LIST(input_string);
+#endif
+    }
 }
 
 #ifdef INTERP
@@ -541,9 +544,10 @@ bool IF(InputString *input_string)
         return false;
     }
     input_string->col += strlen("IF");
+    move_next_char(input_string);
     if (current_position(input_string) != '(')
     {
-        printf("Expected a '(' after IF\n");
+        printf("Expected a '(' after IF at row %i col %i \n", input_string->row, input_string->col);
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
@@ -828,4 +832,13 @@ void test(void)
     assert(is_quote('X') == false);
     find_next_target(test_input_string, &is_quote);
     assert(current_position(test_input_string) == '\'');
+
+    /*InputString *main_input_string = make_input_string();
+    strcpy(main_input_string->array2d[main_input_string->row_count++], "(");
+    strcpy(main_input_string->array2d[main_input_string->row_count++], " ( CAR '2' ) ");
+    strcpy(main_input_string->array2d[main_input_string->row_count++], " (SET B '(1 2 3)' )");
+    strcpy(main_input_string->array2d[main_input_string->row_count++], "");
+    strcpy(main_input_string->array2d[main_input_string->row_count++], ")");
+    PROG(main_input_string);
+    free(main_input_string);*/
 }

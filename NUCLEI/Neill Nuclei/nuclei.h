@@ -8,8 +8,8 @@
 #ifdef INTERP
 #include "specific.h"
 #endif
-#define MAXLINENO 50
-#define MAXLINEWIDTH 50
+#define MAXLINENO 100
+#define MAXLINEWIDTH 200
 #define MAXVARIABLES 50
 #define MAXLISTSIZE 50
 #define SPACE ' '
