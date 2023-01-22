@@ -260,9 +260,12 @@ bool INTFUNC(InputString *input_string)
 #ifdef INTERP
         lisp *first = LIST(input_string);
         lisp *second = LIST(input_string);
-        lisp_isatomic(first);
-        lisp_isatomic(second);
-        // interpreter here
+        if (!lisp_isatomic(first) || !lisp_isatomic(second))
+        {
+            printf("Cannot PLUS non-atomic values row %i col %i\n", input_string->row, input_string->col);
+            exit(EXIT_FAILURE);
+        }
+        *atom = lisp_atom(first->atom + second->atom);
 #else
         LIST(input_string);
         LIST(input_string);
@@ -276,8 +279,12 @@ bool INTFUNC(InputString *input_string)
         move_next_char(input_string);
 #ifdef INTERP
         lisp *list = LIST(input_string);
-        lisp_isatomic(list);
-        // interpreter here
+        if (lisp_isatomic(list))
+        {
+            printf("Cannot check the length of an atom at row %i col %i", input_string->row, input_string->col);
+        }
+        *atom = lisp_atom(lisp_length(list));
+
 #else
         LIST(input_string);
 #endif
@@ -389,7 +396,15 @@ void SET(InputString *input_string)
 #ifdef INTERP
     char letter = VAR(input_string);
     lisp *list = LIST(input_string);
-    add_variable(input_string, letter, list);
+    lisp *existing = find_variable(input_string, letter);
+    if (existing == NULL)
+    {
+        add_variable(input_string, letter, list);
+    }
+    else
+    {
+        memcpy(existing, list,sizeof(lisp)); 
+    }
 #else
     VAR(input_string);
     LIST(input_string);
@@ -412,7 +427,7 @@ void PRINT(InputString *input_string)
     if (current_position(input_string) == '"')
     {
 #ifdef INTERP
-	  char string[50] = ""; // magic number
+        char string[50] = ""; // magic number
         STRING(string, input_string);
         puts(string);
 #else
@@ -552,16 +567,21 @@ bool find_next_target(InputString *input_string, bool (*char_matches)(char targe
 }
 
 #ifdef INTERP
-void pass_bracket_pair(InputString *input_string) {
-  int bracket_count = 0; 
-  do {
-	if (current_position(input_string) == OPEN_BRACKET) {
-	  bracket_count++;
-	} else if (current_position(input_string) == CLOSE_BRACKET) {
-	  bracket_count--;
-	}
-	move_next_char(input_string); // could do move_next_bracket?		  
-  } while (bracket_count != 0);
+void pass_bracket_pair(InputString *input_string)
+{
+    int bracket_count = 0;
+    do
+    {
+        if (current_position(input_string) == OPEN_BRACKET)
+        {
+            bracket_count++;
+        }
+        else if (current_position(input_string) == CLOSE_BRACKET)
+        {
+            bracket_count--;
+        }
+        move_next_char(input_string); // could do move_next_bracket?
+    } while (bracket_count != 0);
 }
 #endif
 
@@ -599,34 +619,34 @@ bool IF(InputString *input_string)
     {
         printf("Expected a '(' after BOOLFUNC BEFORE INSTRCTS\n");
         exit(EXIT_FAILURE);
-    }    
+    }
 #ifdef INTERP
     if ((*lisp)->atom)
     {
-	    move_next_char(input_string);
+        move_next_char(input_string);
         INSTRCTS(input_string);
         if (current_position(input_string) != '(')
         {
-		  printf("Expected a '(' after IF at row %i col %i\n", input_string->row, input_string->col);
+            printf("Expected a '(' after IF at row %i col %i\n", input_string->row, input_string->col);
             exit(EXIT_FAILURE);
-        }        
-		pass_bracket_pair(input_string);
-        
+        }
+        pass_bracket_pair(input_string);
     }
     else
     {
-	  pass_bracket_pair(input_string);
-	  move_next_char(input_string);
-	  if (current_position(input_string) != '(')
+        pass_bracket_pair(input_string);
+        if (current_position(input_string) != '(')
         {
-		  printf("Expected a '(' after IF at row %i col %i\n", input_string->row, input_string->col);
-		  exit(EXIT_FAILURE);
+            printf("Expected a '(' after IF at row %i col %i\n", input_string->row, input_string->col);
+            exit(EXIT_FAILURE);
         }
-	  move_next_char(input_string);
-	  INSTRCTS(input_string);
+        move_next_char(input_string);
+        INSTRCTS(input_string);
     }
+    lisp_free(lisp);
+    free(lisp);
 #else
-	move_next_char(input_string);
+    move_next_char(input_string);
     INSTRCTS(input_string);
     if (current_position(input_string) != '(')
     {
@@ -654,7 +674,9 @@ bool LOOP(InputString *input_string)
     }
     move_next_char(input_string);
 #ifdef INTERP
-    lisp **lisp = NULL;
+    lisp **lisp = ncalloc(1, sizeof lisp);
+    int boolfuncrow = input_string->row;
+    int boolfunccol = input_string->col;
     if (!BOOLFUNC(lisp, input_string))
 #else
     if (!BOOLFUNC(input_string))
@@ -674,8 +696,34 @@ bool LOOP(InputString *input_string)
         printf("Expected a '(' after BOOLFUNC and before INSTRCTS\n");
         exit(EXIT_FAILURE);
     }
+#ifdef INTERP
+    int continuerow = input_string->row;
+    int continuecol = input_string->col; 
+    move_next_char(input_string);
+    int instrctrow = input_string->row;
+    int instrctcol = input_string->col;
+    do
+    {
+        input_string->row = boolfuncrow;
+        input_string->col = boolfunccol;
+        BOOLFUNC(lisp, input_string);
+
+        if ((*lisp)->atom)
+        {
+            input_string->row = instrctrow;
+            input_string->col = instrctcol;
+            INSTRCTS(input_string);
+        }
+    } while ((*lisp)->atom);
+    input_string->row = continuerow;
+    input_string->col = continuecol;
+    pass_bracket_pair(input_string);
+
+#else
     move_next_char(input_string);
     INSTRCTS(input_string);
+
+#endif
     return true;
 }
 
@@ -813,8 +861,8 @@ void LITERAL(InputString *input_string)
         input_string->col++;
     } while (!is_quote(current_position(input_string)));
 #ifdef INTERP
-    literalstring[counter] = NUM;    
-    lisp *literal_value = lisp_fromstring(literalstring);    
+    literalstring[counter] = NUM;
+    lisp *literal_value = lisp_fromstring(literalstring);
 #endif
     move_next_char(input_string);
 
