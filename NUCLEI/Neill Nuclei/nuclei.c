@@ -1,4 +1,5 @@
 #include "nuclei.h"
+//Need to add function to free things, tons of leaks rn 
 
 void PROG(InputString *input_string);
 void INSTRCTS(InputString *input_string);
@@ -171,7 +172,7 @@ lisp *CDR(InputString *input_string)
     get_next_char(input_string);
     lisp *list_value = LIST(input_string);
     char teststr[50] = "";
-    lisp_tostring(lisp_cdr(list_value),teststr); 
+    lisp_tostring(lisp_cdr(list_value), teststr);
     return lisp_cdr(list_value);
 }
 
@@ -238,7 +239,7 @@ void PRINT(InputString *input_string)
 }
 
 lisp *find_variable(InputString *input_string, char letter)
-{ 
+{
     for (int i = 0; i < input_string->variable_count; i++)
     {
         if (letter == input_string->variables[i].name)
@@ -397,7 +398,7 @@ lisp *LITERAL(InputString *input_string)
     do
     {
         literalstring[counter++] = current_position(input_string);
-        input_string->col++; 
+        input_string->col++;
     } while (!is_quote(current_position(input_string)));
     literalstring[counter] = NUM;
     lisp *literal_value = lisp_fromstring(literalstring);
