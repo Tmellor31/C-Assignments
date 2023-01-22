@@ -29,7 +29,8 @@ struct lisp
 };
 
 
-//USED BY JAKE'S FROMSTRING
+//JAKE ROBERTS CODE - AS PER COMMENT FROM KIRA THAT WE CAN USE OLD ASSESSMENT CODE FROM OTHERS
+//HIS EMAIL ci19032@bristol.ac.uk
 //use info when we want a variable that can be a char OR an int
 //when we want info to be an int, t = NUM
 //otherwise t is whatever character we want saved

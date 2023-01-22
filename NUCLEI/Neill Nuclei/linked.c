@@ -240,8 +240,8 @@ void new_atoms(lisp* l, atomtype* accum)
 
 /* ------------- Tougher Ones : Extensions ---------------*/
 
-//TAKEN FROM JAKE AS PER KIRAS COMMENT ON MICROSOFT TEAMS SAYING WE CAN
-//BORROW CODE FROM PREVIOUS EXTENSIONS
+//TAKEN FROM JAKE ROBERTS AS PER KIRAS COMMENT ON MICROSOFT TEAMS SAYING WE CAN
+//BORROW CODE FROM PREVIOUS ASSESSMENTS - HIS STUDENT EMAIl is ci19032@bristol.ac.uk
 lisp* lisp_fromstring(const char* str){
     //these checks are not comprehensive, but help prevent seg faults
     if(!check_bracks(str) || !check_chars(str) || strcmp(str,"") == 0){
