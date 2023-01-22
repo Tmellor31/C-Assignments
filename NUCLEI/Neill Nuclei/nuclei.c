@@ -49,6 +49,8 @@ InputString *make_input_string(void)
     return input_string;
 }
 
+
+
 char current_position(InputString *input_string)
 {
     return input_string->array2d[input_string->row][input_string->col];
@@ -832,6 +834,8 @@ void test(void)
     assert(is_quote('X') == false);
     find_next_target(test_input_string, &is_quote);
     assert(current_position(test_input_string) == '\'');
+
+    free (test_input_string); 
 
     /*InputString *main_input_string = make_input_string();
     strcpy(main_input_string->array2d[main_input_string->row_count++], "(");
