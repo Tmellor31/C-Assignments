@@ -1,0 +1,19 @@
+I tested this assignment through a few methods: 
+Small functions were tested via assert checks, and where appropriate through passing 
+a string titled as 'test_input_string' - I have commented this out in test, but left in the code so 
+an example of how I was testing can be seen. 
+Some challenges arose as a result of avoiding spaces via the use of 'move_next_char'
+to move to the next character rather than simply using brackets to seperate the words.
+
+
+However, the advantage of this approach was that ncl files that span multiple lines
+such as the attached 'multilinetest.ncl' still parse and interpret correctly. 
+
+
+I also wrote ncl files to check the implementation of functions after writing them
+in both my parser and interpreter - utilising the various exit messages to troubleshoot. 
+
+I did discover issues with mem leaks, which prevented ./interp fib.ncl from working due to how 
+functions from the previous assignment such as cons_tostring interacted with 
+this assignments code but was unable to solve them in time. If my pending extension 
+is approved I hope to do so. The parser seems to work with no memory issues however.

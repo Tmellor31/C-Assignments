@@ -424,7 +424,7 @@ void PRINT(InputString *input_string)
 {
     input_string->col += strlen("PRINT");
     move_next_char(input_string);
-    if (current_position(input_string) == DOUBLEQUOTES)
+    if (current_position(input_string) == '"')
     {
 #ifdef INTERP
         char string[50] = ""; // magic number
@@ -439,7 +439,6 @@ void PRINT(InputString *input_string)
 #ifdef INTERP
         lisp *list = LIST(input_string);
         char print_string[MAXLINEWIDTH] = "";
-        //think this is where its overflowing
         lisp_tostring(list, print_string);
         puts(print_string);
 #else
@@ -537,7 +536,7 @@ void move_next_char(InputString *input_string)
 
 bool is_quote(char target)
 {
-    return target == SINGLEQUOTE;
+    return target == '\'';
 }
 
 bool get_next_quote(InputString *input_string)
@@ -594,7 +593,7 @@ bool IF(InputString *input_string)
     }
     input_string->col += strlen("IF");
     move_next_char(input_string);
-    if (current_position(input_string) != OPEN_BRACKET)
+    if (current_position(input_string) != '(')
     {
         printf("Expected a '(' after IF at row %i col %i \n", input_string->row, input_string->col);
         exit(EXIT_FAILURE);
@@ -610,13 +609,13 @@ bool IF(InputString *input_string)
         printf("BOOLFUNC failed to parse\n");
         exit(EXIT_FAILURE);
     }
-    if (current_position(input_string) != CLOSE_BRACKET)
+    if (current_position(input_string) != ')')
     {
         printf("Expected a ')' after BOOLFUNC\n");
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
-    if (current_position(input_string) != OPEN_BRACKET)
+    if (current_position(input_string) != '(')
     {
         printf("Expected a '(' after BOOLFUNC BEFORE INSTRCTS\n");
         exit(EXIT_FAILURE);
@@ -626,7 +625,7 @@ bool IF(InputString *input_string)
     {
         move_next_char(input_string);
         INSTRCTS(input_string);
-        if (current_position(input_string) != OPEN_BRACKET)
+        if (current_position(input_string) != '(')
         {
             printf("Expected a '(' after IF at row %i col %i\n", input_string->row, input_string->col);
             exit(EXIT_FAILURE);
@@ -636,7 +635,7 @@ bool IF(InputString *input_string)
     else
     {
         pass_bracket_pair(input_string);
-        if (current_position(input_string) != OPEN_BRACKET)
+        if (current_position(input_string) != '(')
         {
             printf("Expected a '(' after IF at row %i col %i\n", input_string->row, input_string->col);
             exit(EXIT_FAILURE);
@@ -668,7 +667,7 @@ bool LOOP(InputString *input_string)
     }
     input_string->col += strlen("WHILE");
     move_next_char(input_string);
-    if (current_position(input_string) != OPEN_BRACKET)
+    if (current_position(input_string) != '(')
     {
         printf("Expected a '(' after WHILE\n");
         exit(EXIT_FAILURE);

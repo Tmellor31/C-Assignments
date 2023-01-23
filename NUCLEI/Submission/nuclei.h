@@ -16,8 +16,6 @@
 #define OPEN_BRACKET '('
 #define CLOSE_BRACKET ')'
 #define COMMENT '#'
-#define SINGLEQUOTE '\''
-#define DOUBLEQUOTES '"'
 
 #ifdef INTERP
 typedef struct Var

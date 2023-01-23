@@ -1,0 +1,13 @@
+<PROG>     ::= "(" <INSTRCTS>
+<INSTRCTS> ::= <INSTRCT> <INSTRCTS> | ")"
+<INSTRCT>  ::= "(" <LISTFUNC> ")" | "(" <IOFUNC> ")"
+<LISTFUNC> ::= "CAR" <LIST> | "CDR" <LIST> | "CONS" <LIST> <LIST>
+<IOFUNC>   ::= "SET" <VAR> <LIST> | "PRINT" <VAR>
+<LIST>     ::= <LITERAL> | "NIL" | "(" <LISTFUNC> ")"
+<VAR>      ::= [A-Z]
+# Since lists appear in bracket, to differentiate them
+# from instructions, we use 'single' quotes:
+# For the parser, anything in single-quotes is fine - you don't need to "investigate" whether it's valid or not.
+<LITERAL> ::= Single-quoted list e.g. '(1)', '(1 2 3 (4 5))', or '2'
+
+Literal can be a list(array) or a number
