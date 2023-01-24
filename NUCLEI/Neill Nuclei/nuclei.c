@@ -210,8 +210,6 @@ lisp *CDR(InputString *input_string)
     input_string->col += strlen("CDR");
     get_next_char(input_string);
     lisp *list_value = LIST(input_string);
-    char teststr[50] = "";
-    lisp_tostring(lisp_cdr(list_value), teststr);
     return lisp_cdr(list_value);
 }
 

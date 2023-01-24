@@ -116,6 +116,7 @@ void cons_tostring(const lisp *l, char *str)
         char atomstr[ATOMSTRSIZE] = "";
         //Assigning to string of size 3?strcat seems to be overflowing
         sprintf(atomstr, "%i", lisp_getval(l));
+        //printf("strsize %i atomstr %i\n", (int)strlen(str), (int)strlen(atomstr)); 
         strcat(str, atomstr);
     }
     else
