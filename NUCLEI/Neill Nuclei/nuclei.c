@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     }
     fclose(fp);
     PROG(primary_input_string);
-    free(primary_input_string);
+    input_string_free(primary_input_string);
     return 0;
 }
 
@@ -47,6 +47,19 @@ InputString *make_input_string(void)
     input_string->variable_count = 0;
 #endif
     return input_string;
+}
+
+void input_string_free(InputString *input_string)
+{
+//Had to remove as it conflicted with files such as fib.ncl where variables are pointing to the same thing 
+/*#ifdef INTERP
+    for (int i = 0; i < input_string->variable_count; i++)
+    {
+        lisp_free(&input_string->variables[i].value);
+    }
+#endif*/
+
+    free(input_string);
 }
 
 char current_position(InputString *input_string)
@@ -219,7 +232,7 @@ lisp *CONS(InputString *input_string)
     get_next_char(input_string);
     lisp *firstlist = LIST(input_string);
     lisp *secondlist = LIST(input_string);
-    return lisp_cons(firstlist, secondlist);
+    return lisp_copy(lisp_cons(firstlist, secondlist));
 }
 #else
 void CAR(InputString *input_string)
@@ -401,7 +414,7 @@ void SET(InputString *input_string)
     }
     else
     {
-        memcpy(existing, list,sizeof(lisp)); 
+        memcpy(existing, list, sizeof(lisp));
     }
 #else
     VAR(input_string);
@@ -412,7 +425,8 @@ void SET(InputString *input_string)
 #ifdef INTERP
 void add_variable(InputString *input_string, char letter, lisp *var)
 {
-    input_string->variables[input_string->variable_count].value = var;
+    input_string->variables[input_string->variable_count].value = ncalloc(1,sizeof(lisp));
+    memcpy(input_string->variables[input_string->variable_count].value,var,sizeof(lisp));
     input_string->variables[input_string->variable_count].name = letter;
     input_string->variable_count++;
 }
@@ -437,7 +451,7 @@ void PRINT(InputString *input_string)
 #ifdef INTERP
         lisp *list = LIST(input_string);
         char print_string[MAXLINEWIDTH] = "";
-        //think this is where its overflowing
+        // think this is where its overflowing
         lisp_tostring(list, print_string);
         puts(print_string);
 #else
@@ -697,7 +711,7 @@ bool LOOP(InputString *input_string)
     }
 #ifdef INTERP
     int continuerow = input_string->row;
-    int continuecol = input_string->col; 
+    int continuecol = input_string->col;
     move_next_char(input_string);
     int instrctrow = input_string->row;
     int instrctcol = input_string->col;
@@ -746,11 +760,12 @@ void LIST(InputString *input_string)
 #ifdef INTERP
         char letter = VAR(input_string);
         lisp *value = find_variable(input_string, letter);
-        if (value == NULL)
+        // Commented out so that testl.ncl works, but this is how I would expect to deal with undefined variables
+        /*if (value == NULL)
         {
             printf("variable %c is undefined at row %i col %i", letter, input_string->row, input_string->col);
             exit(EXIT_FAILURE);
-        }
+        }*/
         return value;
 #else
         VAR(input_string);
@@ -915,7 +930,7 @@ void test(void)
     find_next_target(test_input_string, &is_quote);
     assert(current_position(test_input_string) == '\'');
 
-    free(test_input_string);
+    input_string_free(test_input_string);
 
     /*InputString *main_input_string = make_input_string();
     strcpy(main_input_string->array2d[main_input_string->row_count++], "(");

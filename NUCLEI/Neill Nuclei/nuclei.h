@@ -97,6 +97,7 @@ void find_variable(InputString *input_string, char letter);
 #endif
 
 InputString *make_input_string(void);
+void input_string_free(InputString *input_string);
 bool is_at_start(char *inputstring, char *keyword, int inputposition);
 char current_position(InputString *input_string);
 bool end_of_file_reached(InputString *input_string);
