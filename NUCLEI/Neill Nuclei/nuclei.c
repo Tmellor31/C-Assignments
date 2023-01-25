@@ -1,5 +1,8 @@
 #include "nuclei.h"
-// Need to add function to free things, tons of leaks rn
+/*All provided ncl files run for both parser and interpreter, memory leaks are present which I did write a free function for, but I found 
+that certain files such as fib.ncl produced errors due to trying to access freed memory which I didn't know how to fix. 
+I've commented the interp free part out as a result, but my implementation can still be seen.*/ 
+
 
 void test(void);
 
@@ -661,7 +664,7 @@ bool IF(InputString *input_string)
 #else
     move_next_char(input_string);
     INSTRCTS(input_string);
-    if (current_position(input_string) != '(')
+    if (current_position(input_string) != OPEN_BRACKET)
     {
         printf("Expected a '(' after IF\n");
         exit(EXIT_FAILURE);
@@ -698,13 +701,13 @@ bool LOOP(InputString *input_string)
         printf("BOOLFUNC failed to parse\n");
         exit(EXIT_FAILURE);
     }
-    if (current_position(input_string) != ')')
+    if (current_position(input_string) != CLOSE_BRACKET)
     {
         printf("Expected a ')' after BOOLFUNC\n");
         exit(EXIT_FAILURE);
     }
     move_next_char(input_string);
-    if (current_position(input_string) != '(')
+    if (current_position(input_string) != OPEN_BRACKET)
     {
         printf("Expected a '(' after BOOLFUNC and before INSTRCTS\n");
         exit(EXIT_FAILURE);
@@ -771,7 +774,7 @@ void LIST(InputString *input_string)
         VAR(input_string);
 #endif
     }
-    else if (current_position(input_string) == '\'')
+    else if (current_position(input_string) == SINGLEQUOTE)
     {
 #ifdef INTERP
         return LITERAL(input_string);
@@ -820,7 +823,7 @@ void STRING(char *string, InputString *input_string)
 void STRING(InputString *input_string)
 #endif
 {
-    if (current_position(input_string) != '"')
+    if (current_position(input_string) != DOUBLEQUOTES)
     {
         printf("Expected \" at the start of STRING\n");
         exit(EXIT_FAILURE);
@@ -838,7 +841,7 @@ void STRING(InputString *input_string)
         counter++;
 #endif
         input_string->col++;
-    } while (current_position(input_string) != '"');
+    } while (current_position(input_string) != DOUBLEQUOTES);
 #ifdef INTERP
     datastring[counter] = NUM;
     strcpy(string, datastring);
