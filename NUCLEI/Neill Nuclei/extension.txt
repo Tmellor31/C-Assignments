@@ -1,0 +1,6 @@
+*A very small extension* 
+My code uses the 'move_next_char' function to move between each letter in any given ncl file - this means that
+files such as the attached 'multilinetest.ncl' work with no problems, due to how the function handles new lines. Additionally, in files such as the attached 'cara.ncl' the parser notices that there is no space between 'CAR' and
+'A', and throws an error. 
+
+This function took quite a long time to implement and probably wouldn't be done again in hindsight, but it does mean the code handles spaces and newlines very well. 
