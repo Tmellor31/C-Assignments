@@ -855,7 +855,7 @@ lisp *LITERAL(InputString *input_string)
 void LITERAL(InputString *input_string)
 #endif
 {
-    if (current_position(input_string) != '\'')
+    if (current_position(input_string) != SINGLEQUOTE)
     {
         printf("Expected a single quote at the start of Literal\n");
         exit(EXIT_FAILURE);
