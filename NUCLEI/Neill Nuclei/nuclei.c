@@ -1,7 +1,7 @@
 #include "nuclei.h"
 /*All provided ncl files run for both parser and interpreter, memory leaks are present which I did write a free function for, but I found 
 that certain files such as fib.ncl produced errors due to trying to access freed memory which I didn't know how to fix. 
-I've commented the interp free part out as a result, but my implementation can still be seen.*/ 
+I've commented the interp free part out as a result, but my implementation can still be seen (and tested)*/ 
 
 
 void test(void);
